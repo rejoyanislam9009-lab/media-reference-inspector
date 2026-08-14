@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: WordPress.org support forum
+    url: https://wordpress.org/support/plugin/media-reference-inspector/
+    about: Ask usage and installation questions in the official WordPress.org support forum.
+  - name: WordPress.org plugin page
+    url: https://wordpress.org/plugins/media-reference-inspector/
+    about: View the stable release, installation information, and plugin details.
