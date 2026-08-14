@@ -38,7 +38,7 @@ jobs:
       - name: Deploy to WordPress.org SVN
         uses: 10up/action-wordpress-plugin-deploy@stable
         env:
-          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
-          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SVN_USERNAME: rejoyan9009
+          SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
           SLUG: media-reference-inspector
           VERSION: ${{ env.VERSION }}
