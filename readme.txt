@@ -3,7 +3,7 @@ Contributors: rejoyan9009
 Tags: media library, media usage, attachments, references, admin tools
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 1.0.2
+Stable tag: 1.1.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -16,13 +16,16 @@ Media Reference Inspector is a small, read-only admin tool for checking where an
 
 The plugin focuses on standard WordPress locations and intentionally does not delete files, change content, create database tables, track users, or call external services.
 
-Supported reference checks in version 1.0.2:
+Supported reference checks in version 1.1.0:
 
-* Post, page, and custom post type content or excerpts that contain the media URL or WordPress `wp-image-ID` class.
+* Post, page, and custom post type content or excerpts that contain the original media URL, a generated image-size URL, or the WordPress `wp-image-ID` class.
+* Core WordPress media blocks that store attachment IDs: Image, Gallery, Cover, Media & Text, File, Audio, and Video.
 * Featured images stored with WordPress core `_thumbnail_id` metadata.
-* Navigation menu custom URLs that exactly match the media URL.
+* Navigation menu custom URLs that exactly match the original media URL or a generated image-size URL.
 * WordPress Site Icon and Site Logo settings.
-* Active theme Custom Logo, Header Image, and Background Image settings.
+* Active theme Custom Logo, Header Image, and Background Image settings, including generated image-size URL variants where applicable.
+
+Scan results include the post ID for content references to make follow-up checks easier.
 
 The results are advisory. A result of "no references found" does not prove that a file is unused. Themes, page builders, custom database tables, external systems, custom code, or plugin-specific storage can reference media in other ways.
 
@@ -47,19 +50,34 @@ No. The plugin is intentionally read-only. It does not delete, detach, rename, r
 
 No. The plugin checks a focused set of standard WordPress locations. Custom builders, plugins, themes, custom tables, external applications, and custom code may store references elsewhere.
 
+= Which WordPress blocks are detected by attachment ID? =
+
+Version 1.1.0 recognizes the core Image, Gallery, Cover, Media & Text, File, Audio, and Video blocks when their saved block attributes reference the selected Media Library item.
+
+= Does the plugin detect resized image URLs? =
+
+Yes. For image attachments, version 1.1.0 also checks URLs for generated image sizes recorded in WordPress attachment metadata, in addition to the main attachment URL.
+
 = Does the plugin use an external service or API? =
 
 No. All checks run locally in the WordPress admin area against the site's own WordPress data.
 
 = Who can use the scanner? =
 
-Version 1.0.2 requires the `manage_options` capability because scan results can reveal references to content that is not publicly visible.
+Version 1.1.0 requires the `manage_options` capability because scan results can reveal references to content that is not publicly visible.
 
 = Does uninstalling the plugin remove anything? =
 
 The plugin stores no settings or scan history, so there is no plugin data to remove.
 
 == Changelog ==
+
+= 1.1.0 =
+* Added detection for generated image-size URLs recorded in WordPress attachment metadata, including HTTP/HTTPS URL variants.
+* Added attachment-ID-aware detection for core Image, Gallery, Cover, Media & Text, File, Audio, and Video blocks.
+* Extended navigation menu, header image, and background image checks to recognize generated image-size URL variants.
+* Added post IDs to content-reference labels for faster follow-up checks.
+* Preserved the plugin's read-only behavior, existing security checks, and existing standard WordPress reference checks.
 
 = 1.0.2 =
 * Restructured direct database reads so prepared SQL is passed directly to the query methods, satisfying Plugin Check prepared-SQL analysis.

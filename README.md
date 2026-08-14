@@ -6,7 +6,7 @@ Media Reference Inspector is a lightweight, read-only WordPress admin tool that 
 
 ## Current release
 
-- Version: `1.0.2`
+- Version: `1.1.0`
 - WordPress.org slug: `media-reference-inspector`
 - Requires WordPress: `6.2+`
 - Requires PHP: `7.4+`
@@ -16,11 +16,14 @@ Media Reference Inspector is a lightweight, read-only WordPress admin tool that 
 
 Media Reference Inspector checks common, standard WordPress reference locations, including:
 
-- Post, page, and custom post type content or excerpts containing the media URL or a `wp-image-ID` class.
+- Post, page, and custom post type content or excerpts containing the original media URL, generated image-size URLs, or a `wp-image-ID` class.
+- Core Image, Gallery, Cover, Media & Text, File, Audio, and Video blocks that store the attachment ID.
 - Featured images stored in `_thumbnail_id` metadata.
-- Navigation menu custom URLs that exactly match the media URL.
+- Navigation menu custom URLs matching the original or generated image-size URL.
 - WordPress Site Icon and Site Logo settings.
 - Active theme Custom Logo, Header Image, and Background Image settings.
+
+Content-reference results include the post ID for easier follow-up.
 
 ## Safety-first behavior
 
