@@ -14,4 +14,4 @@ Media Reference Inspector is a read-only WordPress admin tool that helps site ad
 
 This repository is prepared for automated deployment to the WordPress.org Plugin Directory through GitHub Actions. WordPress.org-specific icons and banners live in `.wordpress-org/` and are excluded from the plugin package itself.
 
-The deployment workflow requires the repository secrets `SVN_USERNAME` and `SVN_PASSWORD` before the first release is published.
+The deployment workflow uses the WordPress.org SVN username `rejoyan9009` and requires one GitHub Actions repository secret named `WORDPRESS_SVN_PASSWORD`.
