@@ -6,8 +6,10 @@ on:
       version:
         description: Version to publish to WordPress.org
         required: true
-        default: "1.0.2"
+        default: "1.1.0"
   push:
+    branches:
+      - main
     tags:
       - "v*"
       - "[0-9]*"
@@ -18,9 +20,10 @@ permissions:
 jobs:
   deploy:
     name: Deploy plugin release
+    if: ${{ github.event_name != 'push' || github.ref_type == 'tag' || contains(github.event.head_commit.message, '[deploy-wporg-1.1.0]') }}
     runs-on: ubuntu-latest
     env:
-      VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+      VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_type == 'tag' && github.ref_name || '1.1.0' }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
