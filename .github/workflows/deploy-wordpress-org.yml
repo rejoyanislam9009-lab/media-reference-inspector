@@ -8,8 +8,6 @@ on:
         required: true
         default: "2.0.0"
   push:
-    branches:
-      - "main"
     tags:
       - "v*"
       - "[0-9]*"
@@ -19,11 +17,10 @@ permissions:
 
 jobs:
   deploy:
-    if: ${{ github.event_name != 'push' || startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[deploy-wporg-2.0.0]') }}
     name: Deploy plugin release
     runs-on: ubuntu-latest
     env:
-      VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || (startsWith(github.ref, 'refs/tags/') && github.ref_name || '2.0.0') }}
+      VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
       SVN_USERNAME: rejoyan9009
       SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
       SLUG: media-reference-inspector
