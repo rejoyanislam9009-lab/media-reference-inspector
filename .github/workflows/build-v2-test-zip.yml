@@ -1,4 +1,4 @@
-name: Build 2.0.0 Test ZIP
+name: Build 2.0.0 Release Candidate
 
 on:
   push:
@@ -11,18 +11,18 @@ permissions:
 
 jobs:
   build:
-    name: Validate and package beta
+    name: Validate and package release candidate
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Validate beta source
+      - name: Validate release source
         shell: bash
         run: |
           set -euo pipefail
-          grep -Eq '^[[:space:]]*\* Version:[[:space:]]+2\.0\.0-beta\.1[[:space:]]*$' media-reference-inspector.php
-          grep -Eq '^Stable tag:[[:space:]]+1\.1\.0[[:space:]]*$' readme.txt
+          grep -Eq '^[[:space:]]*\* Version:[[:space:]]+2\.0\.0[[:space:]]*$' media-reference-inspector.php
+          grep -Eq '^Stable tag:[[:space:]]+2\.0\.0[[:space:]]*$' readme.txt
           find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
           node --check assets/js/admin.js
 
@@ -30,15 +30,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git archive --format=zip --prefix=media-reference-inspector/ HEAD > media-reference-inspector-2.0.0-beta.1.zip
-          unzip -l media-reference-inspector-2.0.0-beta.1.zip
-          ! unzip -Z1 media-reference-inspector-2.0.0-beta.1.zip | grep -Eq '/(\.github|\.wordpress-org)/'
-          ! unzip -Z1 media-reference-inspector-2.0.0-beta.1.zip | grep -Eq '/README\.md$'
+          git archive --format=zip --prefix=media-reference-inspector/ HEAD > media-reference-inspector-2.0.0.zip
+          unzip -l media-reference-inspector-2.0.0.zip
+          ! unzip -Z1 media-reference-inspector-2.0.0.zip | grep -Eq '/(\.github|\.wordpress-org)/'
+          ! unzip -Z1 media-reference-inspector-2.0.0.zip | grep -Eq '/README\.md$'
 
-      - name: Upload test ZIP
+      - name: Upload release candidate ZIP
         uses: actions/upload-artifact@v7
         with:
-          name: media-reference-inspector-2.0.0-beta.1
-          path: media-reference-inspector-2.0.0-beta.1.zip
+          name: media-reference-inspector-2.0.0-release-candidate
+          path: media-reference-inspector-2.0.0.zip
           if-no-files-found: error
           retention-days: 14

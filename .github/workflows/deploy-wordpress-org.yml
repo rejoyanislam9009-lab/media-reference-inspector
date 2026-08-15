@@ -6,7 +6,7 @@ on:
       version:
         description: Version to publish to WordPress.org
         required: true
-        default: "1.1.0"
+        default: "2.0.0"
   push:
     tags:
       - "v*"
@@ -21,9 +21,12 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+      SVN_USERNAME: rejoyan9009
+      SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
+      SLUG: media-reference-inspector
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Validate release version
         shell: bash
@@ -34,11 +37,69 @@ jobs:
           grep -Eq "^[[:space:]]*\* Version:[[:space:]]+$VERSION[[:space:]]*$" media-reference-inspector.php
           grep -Eq "^Stable tag:[[:space:]]+$VERSION[[:space:]]*$" readme.txt
           find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
+          node --check assets/js/admin.js
+
+      - name: Install Subversion
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v svn >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y subversion
+          fi
 
       - name: Deploy to WordPress.org SVN
-        uses: 10up/action-wordpress-plugin-deploy@stable
-        env:
-          SVN_USERNAME: rejoyan9009
-          SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
-          SLUG: media-reference-inspector
-          VERSION: ${{ env.VERSION }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SVN_DIR="${HOME}/svn-${SLUG}"
+          EXPORT_DIR="${HOME}/export-${SLUG}"
+
+          svn checkout --depth immediates "https://plugins.svn.wordpress.org/${SLUG}/" "$SVN_DIR"
+          cd "$SVN_DIR"
+          svn update --set-depth infinity assets
+          svn update --set-depth infinity trunk
+          svn update --set-depth immediates tags
+
+          if [ -d "tags/$VERSION" ]; then
+            echo "Version $VERSION is already published; refusing to rewrite an existing tag."
+            exit 1
+          fi
+
+          rm -rf "$EXPORT_DIR"
+          mkdir -p "$EXPORT_DIR"
+          cd "$GITHUB_WORKSPACE"
+          git archive HEAD | tar -x -C "$EXPORT_DIR"
+
+          cd "$SVN_DIR"
+          rsync -rc --delete "$EXPORT_DIR/" trunk/
+          rsync -rc --delete "$GITHUB_WORKSPACE/.wordpress-org/" assets/
+
+          svn add trunk assets --force >/dev/null
+          while IFS= read -r path; do
+            [ -n "$path" ] && svn rm "$path"
+          done < <(svn status trunk assets | awk '/^!/ { sub(/^! +/, ""); print }')
+
+          svn cp trunk "tags/$VERSION"
+
+          if compgen -G "assets/*.png" > /dev/null; then
+            svn propset svn:mime-type image/png assets/*.png >/dev/null
+          fi
+          if compgen -G "assets/*.jpg" > /dev/null; then
+            svn propset svn:mime-type image/jpeg assets/*.jpg >/dev/null
+          fi
+          if compgen -G "assets/*.svg" > /dev/null; then
+            svn propset svn:mime-type image/svg+xml assets/*.svg >/dev/null || true
+          fi
+
+          svn update
+          svn status
+          svn commit \
+            -m "Release Media Reference Inspector $VERSION by rejoyan9009" \
+            --no-auth-cache \
+            --non-interactive \
+            --username "$SVN_USERNAME" \
+            --password "$SVN_PASSWORD"
+
+          echo "Plugin version $VERSION deployed to WordPress.org."
