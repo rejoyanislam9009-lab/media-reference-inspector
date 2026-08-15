@@ -40,6 +40,11 @@ Media Reference Inspector does not send data to external services and does not a
 3. Go to Media > Media References.
 4. Choose a media item and select "Find References".
 
+== Screenshots ==
+
+1. Browse Media Library items from Media > Media References, search the list, and choose Find References for the item you want to inspect.
+2. Review the scan result and safety warning when no supported references are found; the plugin remains read-only and does not change the selected media item.
+
 == Frequently Asked Questions ==
 
 = Does this plugin delete media files? =
