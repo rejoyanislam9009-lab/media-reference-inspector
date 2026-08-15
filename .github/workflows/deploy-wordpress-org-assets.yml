@@ -1,0 +1,74 @@
+name: Deploy WordPress.org Assets
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".wordpress-org/**"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-assets:
+    name: Deploy directory assets
+    runs-on: ubuntu-latest
+    env:
+      SVN_USERNAME: rejoyan9009
+      SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
+      SLUG: media-reference-inspector
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Subversion
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v svn >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y subversion
+          fi
+
+      - name: Deploy WordPress.org assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          SVN_DIR="${HOME}/svn-${SLUG}"
+
+          svn checkout --depth immediates "https://plugins.svn.wordpress.org/${SLUG}/" "$SVN_DIR"
+          cd "$SVN_DIR"
+          svn update --set-depth infinity assets
+
+          rsync -rc --delete "${GITHUB_WORKSPACE}/.wordpress-org/" assets/
+          svn add assets --force >/dev/null
+
+          while IFS= read -r path; do
+            [ -n "$path" ] && svn rm "$path"
+          done < <(svn status assets | awk '/^!/ { sub(/^! +/, ""); print }')
+
+          if compgen -G "assets/*.png" > /dev/null; then
+            svn propset svn:mime-type image/png assets/*.png >/dev/null
+          fi
+          if compgen -G "assets/*.jpg" > /dev/null; then
+            svn propset svn:mime-type image/jpeg assets/*.jpg >/dev/null
+          fi
+          if compgen -G "assets/*.svg" > /dev/null; then
+            svn propset svn:mime-type image/svg+xml assets/*.svg >/dev/null || true
+          fi
+
+          svn update assets
+
+          if [ -n "$(svn status assets)" ]; then
+            svn commit assets \
+              -m "Update Media Reference Inspector screenshots by rejoyan9009" \
+              --no-auth-cache \
+              --non-interactive \
+              --username "$SVN_USERNAME" \
+              --password "$SVN_PASSWORD"
+          else
+            echo "No WordPress.org asset changes to deploy."
+          fi
