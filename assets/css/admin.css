@@ -1,36 +1,449 @@
 .mediarefinspector-admin {
-	max-width: 100%;
+	--mri-border: #dcdcde;
+	--mri-muted: #646970;
+	--mri-surface: #fff;
+	--mri-subtle: #f6f7f7;
+	--mri-accent: #2271b1;
+	--mri-success: #008a20;
+	--mri-warning: #996800;
+	max-width: 1280px;
+	margin-right: 20px;
 }
 
-.mediarefinspector-search-form {
-	clear: both;
-	margin: 16px 0;
+.mediarefinspector-header {
+	margin: 20px 0 0;
+	border: 1px solid var(--mri-border);
+	border-radius: 10px 10px 0 0;
+	background: var(--mri-surface);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
 }
 
-.mediarefinspector-admin .mediarefinspector-search-box {
-	float: none;
+.mediarefinspector-brand {
 	display: flex;
+	gap: 18px;
+	align-items: flex-start;
+	padding: 24px;
+}
+
+.mediarefinspector-brand-mark {
+	display: flex;
+	width: 56px;
+	height: 56px;
+	flex: 0 0 56px;
 	align-items: center;
-	gap: 8px;
-	width: min(100%, 640px);
+	justify-content: center;
+	border-radius: 12px;
+	background: #f0f6fc;
+	color: var(--mri-accent);
+}
+
+.mediarefinspector-brand-mark .dashicons {
+	width: 32px;
+	height: 32px;
+	font-size: 32px;
+}
+
+.mediarefinspector-brand-copy h1 {
+	margin: 0;
+	font-size: 24px;
+	line-height: 1.25;
+}
+
+.mediarefinspector-brand-copy > p {
+	max-width: 760px;
+	margin: 7px 0 12px;
+	color: var(--mri-muted);
+	font-size: 14px;
+}
+
+.mediarefinspector-badges {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 7px;
+}
+
+.mediarefinspector-badge {
+	display: inline-flex;
+	gap: 5px;
+	align-items: center;
+	min-height: 24px;
+	padding: 0 9px;
+	border: 1px solid var(--mri-border);
+	border-radius: 999px;
+	background: var(--mri-subtle);
+	color: #3c434a;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.mediarefinspector-badge .dashicons {
+	width: 15px;
+	height: 15px;
+	font-size: 15px;
+}
+
+.mediarefinspector-badge-safe {
+	border-color: #b8dfc2;
+	background: #edfaef;
+	color: #006b1b;
+}
+
+.mediarefinspector-tabs {
+	padding: 0 20px;
+	border-top: 1px solid var(--mri-border);
+	border-bottom: 0;
+	background: #fbfbfc;
+}
+
+.mediarefinspector-tabs .nav-tab {
+	margin-top: 8px;
+}
+
+.mediarefinspector-content {
+	padding: 24px;
+	border: 1px solid var(--mri-border);
+	border-top: 0;
+	border-radius: 0 0 10px 10px;
+	background: #f6f7f7;
+}
+
+.mediarefinspector-section-heading {
+	display: flex;
+	gap: 16px;
+	align-items: flex-start;
+	justify-content: space-between;
+	margin-bottom: 18px;
+}
+
+.mediarefinspector-section-heading h2 {
+	margin: 0 0 5px;
+	font-size: 20px;
+}
+
+.mediarefinspector-section-heading p {
+	max-width: 780px;
+	margin: 0;
+	color: var(--mri-muted);
+}
+
+.mediarefinspector-panel {
+	box-sizing: border-box;
+	padding: 18px;
+	border: 1px solid var(--mri-border);
+	border-radius: 8px;
+	background: var(--mri-surface);
+	box-shadow: 0 1px 1px rgba(0, 0, 0, .025);
+}
+
+.mediarefinspector-filter-form,
+.mediarefinspector-bulk-controls {
+	display: flex;
+	gap: 14px;
+	align-items: flex-end;
+	margin: 0 0 18px;
+}
+
+.mediarefinspector-field {
+	display: flex;
+	min-width: 160px;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.mediarefinspector-field-grow {
+	min-width: 260px;
+	flex: 1 1 auto;
+}
+
+.mediarefinspector-field label,
+.mediarefinspector-bulk-filter-row label {
+	font-weight: 600;
+}
+
+.mediarefinspector-field input[type="search"],
+.mediarefinspector-field select {
+	width: 100%;
+	min-height: 36px;
 	margin: 0;
 }
 
-.mediarefinspector-admin .mediarefinspector-search-box input[type="search"] {
+.mediarefinspector-field-action {
+	min-width: auto;
+	flex-direction: row;
+}
+
+.mediarefinspector-media-grid {
+	display: grid;
+	gap: 12px;
+}
+
+.mediarefinspector-media-card {
+	display: grid;
+	grid-template-columns: 82px minmax(0, 1fr) auto;
+	gap: 16px;
+	align-items: center;
+	padding: 14px;
+	border: 1px solid var(--mri-border);
+	border-radius: 8px;
+	background: var(--mri-surface);
+}
+
+.mediarefinspector-media-preview,
+.mediarefinspector-result-preview {
+	display: flex;
+	width: 82px;
+	height: 82px;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	border: 1px solid #e2e4e7;
+	border-radius: 7px;
+	background: #f9f9f9;
+}
+
+.mediarefinspector-media-preview img,
+.mediarefinspector-result-preview img {
+	max-width: 100%;
+	height: auto;
+}
+
+.mediarefinspector-media-copy {
 	min-width: 0;
-	width: auto;
-	flex: 1 1 260px;
-	margin: 0;
 }
 
-.mediarefinspector-admin .mediarefinspector-search-box .button {
-	flex: 0 0 auto;
-	margin: 0;
+.mediarefinspector-media-copy h3 {
+	margin: 0 0 5px;
+	font-size: 14px;
+}
+
+.mediarefinspector-media-copy code,
+.mediarefinspector-result-media code {
+	display: inline-block;
+	max-width: 100%;
+	overflow-wrap: anywhere;
+	white-space: normal;
+}
+
+.mediarefinspector-media-copy p {
+	margin: 6px 0 0;
+	color: var(--mri-muted);
+}
+
+.mediarefinspector-file-preview {
+	display: inline-flex;
+	width: 64px;
+	height: 64px;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+	gap: 3px;
+	color: #50575e;
+}
+
+.mediarefinspector-file-preview .dashicons {
+	width: 26px;
+	height: 26px;
+	font-size: 26px;
+}
+
+.mediarefinspector-file-extension {
+	max-width: 56px;
+	overflow: hidden;
+	font-size: 10px;
+	font-weight: 700;
+	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
+.mediarefinspector-result-panel {
+	display: flex;
+	gap: 20px;
+	align-items: center;
+	justify-content: space-between;
+	margin: 0 0 16px;
+	padding: 18px;
+	border: 1px solid var(--mri-border);
+	border-radius: 8px;
+	background: var(--mri-surface);
+}
+
+.mediarefinspector-result-media {
+	display: flex;
+	min-width: 0;
+	gap: 16px;
+	align-items: center;
+}
+
+.mediarefinspector-result-media h3 {
+	margin: 3px 0 4px;
+	font-size: 18px;
+}
+
+.mediarefinspector-result-media p {
+	margin: 4px 0;
+}
+
+.mediarefinspector-eyebrow {
+	color: var(--mri-muted);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+}
+
+.mediarefinspector-result-count {
+	display: flex;
+	min-width: 118px;
+	padding: 12px 14px;
+	border-radius: 8px;
+	background: #edfaef;
+	color: #006b1b;
+	text-align: center;
+	flex-direction: column;
+}
+
+.mediarefinspector-result-count.is-warning {
+	background: #fcf9e8;
+	color: #7a5d00;
+}
+
+.mediarefinspector-result-count strong {
+	font-size: 26px;
+	line-height: 1;
+}
+
+.mediarefinspector-result-count span {
+	margin-top: 5px;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.mediarefinspector-reference-groups {
+	display: grid;
+	gap: 14px;
+	margin-bottom: 16px;
+}
+
+.mediarefinspector-reference-group {
+	border: 1px solid var(--mri-border);
+	border-radius: 8px;
+	background: var(--mri-surface);
+}
+
+.mediarefinspector-reference-group-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 15px;
+	border-bottom: 1px solid var(--mri-border);
+	background: #fbfbfc;
+}
+
+.mediarefinspector-reference-group-heading h3 {
+	margin: 0;
+	font-size: 14px;
+}
+
+.mediarefinspector-reference-group-heading span {
+	display: inline-flex;
+	min-width: 24px;
+	height: 24px;
+	align-items: center;
+	justify-content: center;
+	border-radius: 999px;
+	background: #e9f2f9;
+	color: #135e96;
+	font-weight: 700;
+}
+
+.mediarefinspector-reference-item {
+	display: flex;
+	gap: 14px;
+	align-items: center;
+	justify-content: space-between;
+	padding: 13px 15px;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+.mediarefinspector-reference-item:last-child {
+	border-bottom: 0;
+}
+
+.mediarefinspector-reference-item strong {
+	display: block;
+	margin-bottom: 6px;
+}
+
+.mediarefinspector-status-pill {
+	display: inline-block;
+	padding: 2px 7px;
+	border-radius: 999px;
+	background: #f0f0f1;
+	color: #50575e;
+	font-size: 11px;
+}
+
+.mediarefinspector-reference-actions,
+.mediarefinspector-bulk-table td:last-child {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.mediarefinspector-progress {
+	margin: 16px 0;
+	padding: 15px 18px;
+	border: 1px solid var(--mri-border);
+	border-radius: 8px;
+	background: var(--mri-surface);
+}
+
+.mediarefinspector-progress-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 9px;
+}
+
+.mediarefinspector-progress progress {
+	width: 100%;
+	height: 13px;
+}
+
+.mediarefinspector-summary-grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 12px;
+	margin: 16px 0;
+}
+
+.mediarefinspector-summary-card {
+	padding: 14px 16px;
+	border: 1px solid var(--mri-border);
+	border-radius: 8px;
+	background: var(--mri-surface);
+}
+
+.mediarefinspector-summary-card span {
+	display: block;
+	color: var(--mri-muted);
+	font-size: 12px;
+}
+
+.mediarefinspector-summary-card strong {
+	display: block;
+	margin-top: 4px;
+	font-size: 24px;
+}
+
+.mediarefinspector-bulk-filter-row {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	margin: 14px 0 10px;
+}
+
 .mediarefinspector-table-wrap {
-	clear: both;
 	max-width: 100%;
 	overflow-x: auto;
 	-webkit-overflow-scrolling: touch;
@@ -40,281 +453,262 @@
 	width: 100%;
 }
 
-.mediarefinspector-table .mediarefinspector-preview-cell {
-	width: 72px;
-}
-
-.mediarefinspector-table img {
-	max-width: 60px;
-	height: auto;
-}
-
-.mediarefinspector-media-table td:last-child,
-.mediarefinspector-media-table th:last-child {
-	width: 150px;
-}
-
-.mediarefinspector-media-table .button {
-	white-space: nowrap;
-}
-
-.mediarefinspector-file-preview {
-	display: inline-flex;
-	width: 58px;
-	height: 58px;
-	box-sizing: border-box;
-	align-items: center;
-	justify-content: center;
-	flex-direction: column;
-	gap: 2px;
-	border: 1px solid #c3c4c7;
-	background: #f6f7f7;
-	color: #50575e;
-}
-
-.mediarefinspector-file-preview .dashicons {
-	width: 24px;
-	height: 24px;
-	font-size: 24px;
-}
-
-.mediarefinspector-file-extension {
-	max-width: 52px;
-	overflow: hidden;
-	font-size: 10px;
+.mediarefinspector-bulk-status {
 	font-weight: 600;
-	line-height: 1.1;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+}
+
+.mediarefinspector-bulk-status.is-referenced {
+	color: var(--mri-success);
+}
+
+.mediarefinspector-bulk-status.is-unreferenced {
+	color: var(--mri-warning);
+}
+
+.mediarefinspector-bulk-status.is-error {
+	color: #b32d2e;
+}
+
+.mediarefinspector-empty-state {
+	padding: 42px 24px;
+	border: 1px dashed #c3c4c7;
+	border-radius: 8px;
+	background: rgba(255, 255, 255, .6);
+	color: var(--mri-muted);
+	text-align: center;
+}
+
+.mediarefinspector-empty-state .dashicons {
+	width: 36px;
+	height: 36px;
+	font-size: 36px;
+}
+
+.mediarefinspector-empty-state h3 {
+	margin: 8px 0 5px;
+	color: #1d2327;
+}
+
+.mediarefinspector-empty-state p {
+	margin: 0;
+}
+
+.mediarefinspector-empty-state-inline {
+	padding: 28px 20px;
+}
+
+.mediarefinspector-help-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 14px;
+}
+
+.mediarefinspector-help-grid .mediarefinspector-panel-warning {
+	grid-column: 1 / -1;
+	border-left: 4px solid #dba617;
+}
+
+.mediarefinspector-panel h3 {
+	margin-top: 0;
+}
+
+.mediarefinspector-check-list {
+	margin: 0;
+	padding-left: 20px;
+}
+
+.mediarefinspector-check-list li {
+	margin-bottom: 8px;
+}
+
+.mediarefinspector-safety-note {
+	display: flex;
+	gap: 7px;
+	align-items: flex-start;
+	margin-top: 14px;
+}
+
+.mediarefinspector-safety-note .dashicons {
+	flex: 0 0 auto;
+	margin-top: 1px;
+}
+
+.mediarefinspector-inline-notice {
+	margin: 0 0 16px !important;
 }
 
 .mediarefinspector-pagination {
-	float: none;
-	clear: both;
-	margin-top: 12px;
-}
-
-.mediarefinspector-pagination .tablenav-pages {
-	float: none;
-	margin: 0;
+	margin-top: 16px;
 	text-align: right;
 }
 
 .mediarefinspector-pagination .page-numbers {
 	display: inline-block;
-	margin: 0 2px;
-	vertical-align: middle;
+	min-width: 28px;
+	margin-left: 3px;
+	padding: 5px 8px;
+	border: 1px solid var(--mri-border);
+	border-radius: 4px;
+	background: var(--mri-surface);
+	text-decoration: none;
 }
 
-/*
- * WordPress admin can be rendered with a desktop-sized CSS viewport on phones.
- * Use a wider breakpoint so the media list remains usable in that mode too.
- */
-@media screen and (max-width: 1200px) {
-	.mediarefinspector-media-table-wrap {
-		overflow: visible;
+.mediarefinspector-pagination .current {
+	border-color: var(--mri-accent);
+	background: var(--mri-accent);
+	color: #fff;
+}
+
+@media screen and (max-width: 960px) {
+	.mediarefinspector-admin {
+		margin-right: 10px;
 	}
 
-	.mediarefinspector-media-table {
-		border: 0;
-		box-shadow: none;
-		background: transparent;
+	.mediarefinspector-filter-form,
+	.mediarefinspector-bulk-controls {
+		align-items: stretch;
+		flex-wrap: wrap;
 	}
 
-	.mediarefinspector-media-table thead {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		padding: 0;
-		margin: -1px;
-		overflow: hidden;
-		clip: rect(0, 0, 0, 0);
-		clip-path: inset(50%);
-		white-space: nowrap;
-		border: 0;
+	.mediarefinspector-field,
+	.mediarefinspector-field-grow {
+		min-width: 220px;
+		flex: 1 1 220px;
 	}
 
-	.mediarefinspector-media-table tbody {
-		display: block;
+	.mediarefinspector-field-action {
+		align-self: flex-end;
+		flex: 0 0 auto;
 	}
 
-	.mediarefinspector-media-table tr {
-		display: grid;
-		grid-template-columns: 72px minmax(0, 1fr) minmax(145px, auto);
-		grid-template-areas:
-			"preview media action"
-			"preview type action"
-			"preview date action";
-		column-gap: 14px;
-		row-gap: 4px;
-		align-items: center;
-		margin: 0 0 12px;
-		padding: 12px;
-		border: 1px solid #c3c4c7;
-		background: #fff;
-		box-sizing: border-box;
-	}
-
-	.mediarefinspector-media-table.striped > tbody > :nth-child(odd),
-	.mediarefinspector-media-table.striped > tbody > :nth-child(even) {
-		background: #fff;
-	}
-
-	.mediarefinspector-media-table td,
-	.mediarefinspector-media-table th[scope="row"] {
-		display: block;
-		width: auto;
-		min-width: 0;
-		padding: 0;
-		border: 0;
-		box-sizing: border-box;
-		text-align: left;
-	}
-
-	.mediarefinspector-media-table .mediarefinspector-preview-cell {
-		grid-area: preview;
-		width: 72px;
-	}
-
-	.mediarefinspector-media-table th[scope="row"] {
-		grid-area: media;
-	}
-
-	.mediarefinspector-media-table td[data-label="Type"] {
-		grid-area: type;
-	}
-
-	.mediarefinspector-media-table td[data-label="Date"] {
-		grid-area: date;
-	}
-
-	.mediarefinspector-media-table td[data-label="Usage check"] {
-		grid-area: action;
-		align-self: center;
-		width: auto;
-		text-align: right;
-	}
-
-	.mediarefinspector-media-table td[data-label="Type"]::before,
-	.mediarefinspector-media-table td[data-label="Date"]::before {
-		content: attr(data-label) ": ";
-		font-weight: 600;
-	}
-
-	.mediarefinspector-media-table .mediarefinspector-preview-cell::before,
-	.mediarefinspector-media-table th[scope="row"]::before,
-	.mediarefinspector-media-table td[data-label="Usage check"]::before {
-		content: none;
-	}
-
-	.mediarefinspector-media-table code {
-		display: inline-block;
-		max-width: 100%;
-		overflow-wrap: anywhere;
-		white-space: normal;
-	}
-
-	.mediarefinspector-media-table .button {
-		max-width: 100%;
-	}
-
-	.mediarefinspector-pagination .tablenav-pages {
-		text-align: left;
+	.mediarefinspector-summary-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
 
 @media screen and (max-width: 782px) {
-	.mediarefinspector-admin .mediarefinspector-search-box {
+	.mediarefinspector-admin {
+		margin-right: 10px;
+	}
+
+	.mediarefinspector-brand {
+		padding: 18px;
+	}
+
+	.mediarefinspector-brand-mark {
+		width: 46px;
+		height: 46px;
+		flex-basis: 46px;
+	}
+
+	.mediarefinspector-brand-mark .dashicons {
+		width: 26px;
+		height: 26px;
+		font-size: 26px;
+	}
+
+	.mediarefinspector-content {
+		padding: 16px;
+	}
+
+	.mediarefinspector-tabs {
+		display: flex;
+		padding: 0 10px;
+		overflow-x: auto;
+	}
+
+	.mediarefinspector-tabs .nav-tab {
+		flex: 0 0 auto;
+	}
+
+	.mediarefinspector-filter-form,
+	.mediarefinspector-bulk-controls,
+	.mediarefinspector-section-heading,
+	.mediarefinspector-result-panel,
+	.mediarefinspector-reference-item {
 		align-items: stretch;
 		flex-direction: column;
+	}
+
+	.mediarefinspector-field,
+	.mediarefinspector-field-grow,
+	.mediarefinspector-field-action {
 		width: 100%;
+		min-width: 0;
+		flex: 1 1 auto;
 	}
 
-	.mediarefinspector-admin .mediarefinspector-search-box input[type="search"],
-	.mediarefinspector-admin .mediarefinspector-search-box .button {
-		width: 100%;
-		max-width: none;
-	}
-
-	.mediarefinspector-media-table tr {
-		grid-template-columns: 64px minmax(0, 1fr);
-		grid-template-areas:
-			"preview media"
-			"type type"
-			"date date"
-			"action action";
-		align-items: start;
-	}
-
-	.mediarefinspector-media-table .mediarefinspector-preview-cell {
-		width: 64px;
-	}
-
-	.mediarefinspector-media-table td[data-label="Usage check"] {
-		margin-top: 6px;
-		text-align: left;
-	}
-
-	.mediarefinspector-media-table td[data-label="Usage check"] .button {
-		display: block;
+	.mediarefinspector-field-action .button,
+	.mediarefinspector-media-action .button {
 		width: 100%;
 		min-height: 40px;
-		padding-top: 5px;
-		padding-bottom: 5px;
 		text-align: center;
 	}
 
-	.mediarefinspector-results-table-wrap {
+	.mediarefinspector-media-card {
+		grid-template-columns: 66px minmax(0, 1fr);
+		gap: 12px;
+	}
+
+	.mediarefinspector-media-preview {
+		width: 66px;
+		height: 66px;
+	}
+
+	.mediarefinspector-media-action {
+		grid-column: 1 / -1;
+	}
+
+	.mediarefinspector-result-count {
+		min-width: 0;
+	}
+
+	.mediarefinspector-summary-grid,
+	.mediarefinspector-help-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.mediarefinspector-help-grid .mediarefinspector-panel-warning {
+		grid-column: auto;
+	}
+
+	.mediarefinspector-table-wrap {
 		overflow: visible;
 	}
 
-	.mediarefinspector-results-table {
-		border: 0;
-		box-shadow: none;
-	}
-
-	.mediarefinspector-results-table thead {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		padding: 0;
-		margin: -1px;
-		overflow: hidden;
-		clip: rect(0, 0, 0, 0);
-		clip-path: inset(50%);
-		white-space: nowrap;
-		border: 0;
-	}
-
-	.mediarefinspector-results-table tbody,
-	.mediarefinspector-results-table tr,
-	.mediarefinspector-results-table td {
+	.mediarefinspector-bulk-table,
+	.mediarefinspector-bulk-table tbody,
+	.mediarefinspector-bulk-table tr,
+	.mediarefinspector-bulk-table td {
 		display: block;
 		width: 100%;
 		box-sizing: border-box;
 	}
 
-	.mediarefinspector-results-table tr {
-		margin: 0 0 12px;
-		padding: 10px 12px;
-		border: 1px solid #c3c4c7;
+	.mediarefinspector-bulk-table thead {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		clip-path: inset(50%);
+	}
+
+	.mediarefinspector-bulk-table tr {
+		margin-bottom: 12px;
+		padding: 12px;
+		border: 1px solid var(--mri-border);
+		border-radius: 7px;
 		background: #fff;
 	}
 
-	.mediarefinspector-results-table.striped > tbody > :nth-child(odd),
-	.mediarefinspector-results-table.striped > tbody > :nth-child(even) {
-		background: #fff;
-	}
-
-	.mediarefinspector-results-table td {
-		padding: 5px 0;
+	.mediarefinspector-bulk-table td {
+		padding: 6px 0;
 		border: 0;
-		text-align: left;
 	}
 
-	.mediarefinspector-results-table td[data-label]::before {
-		content: attr(data-label) ": ";
-		display: inline;
-		font-weight: 600;
+	.mediarefinspector-pagination {
+		text-align: left;
 	}
 }

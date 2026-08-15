@@ -1,0 +1,315 @@
+(function () {
+	'use strict';
+
+	var config = window.MediaRefInspectorAdmin || {};
+	var startButton = document.getElementById('mediarefinspector-start-bulk');
+
+	if (!startButton || !config.ajaxUrl || !config.nonce) {
+		return;
+	}
+
+	var stopButton = document.getElementById('mediarefinspector-stop-bulk');
+	var exportButton = document.getElementById('mediarefinspector-export-csv');
+	var progressWrap = document.getElementById('mediarefinspector-bulk-progress');
+	var progressStatus = document.getElementById('mediarefinspector-progress-status');
+	var progressCount = document.getElementById('mediarefinspector-progress-count');
+	var progressBar = document.getElementById('mediarefinspector-progress-bar');
+	var summary = document.getElementById('mediarefinspector-bulk-summary');
+	var filterRow = document.getElementById('mediarefinspector-bulk-filter-row');
+	var resultFilter = document.getElementById('mediarefinspector-result-filter');
+	var emptyState = document.getElementById('mediarefinspector-bulk-empty');
+	var tableWrap = document.getElementById('mediarefinspector-bulk-table-wrap');
+	var resultsBody = document.getElementById('mediarefinspector-bulk-results');
+	var searchInput = document.getElementById('mediarefinspector-bulk-search');
+	var typeInput = document.getElementById('mediarefinspector-bulk-type');
+	var limitInput = document.getElementById('mediarefinspector-bulk-limit');
+	var strings = config.strings || {};
+	var stopped = false;
+	var results = [];
+
+	function request(payload) {
+		var body = new URLSearchParams();
+		Object.keys(payload).forEach(function (key) {
+			body.append(key, payload[key]);
+		});
+		body.append('nonce', config.nonce);
+
+		return fetch(config.ajaxUrl, {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+			},
+			body: body.toString()
+		}).then(function (response) {
+			return response.json();
+		});
+	}
+
+	function setRunning(isRunning) {
+		startButton.disabled = isRunning;
+		stopButton.hidden = !isRunning;
+		searchInput.disabled = isRunning;
+		typeInput.disabled = isRunning;
+		limitInput.disabled = isRunning;
+	}
+
+	function resetView() {
+		stopped = false;
+		results = [];
+		resultsBody.replaceChildren();
+		progressWrap.hidden = false;
+		progressStatus.textContent = strings.starting || 'Preparing media scan…';
+		progressCount.textContent = '0 / 0';
+		progressBar.value = 0;
+		progressBar.max = 100;
+		summary.hidden = true;
+		filterRow.hidden = true;
+		tableWrap.hidden = true;
+		emptyState.hidden = true;
+		exportButton.disabled = true;
+		updateSummary();
+	}
+
+	function updateProgress(current, total) {
+		progressCount.textContent = current + ' / ' + total;
+		progressBar.max = Math.max(total, 1);
+		progressBar.value = current;
+	}
+
+	function updateSummary() {
+		var counts = {
+			scanned: results.length,
+			referenced: 0,
+			unreferenced: 0,
+			errors: 0
+		};
+
+		results.forEach(function (item) {
+			if (item.status === 'referenced') {
+				counts.referenced += 1;
+			} else if (item.status === 'unreferenced') {
+				counts.unreferenced += 1;
+			} else {
+				counts.errors += 1;
+			}
+		});
+
+		Object.keys(counts).forEach(function (key) {
+			var el = summary.querySelector('[data-summary="' + key + '"]');
+			if (el) {
+				el.textContent = counts[key];
+			}
+		});
+	}
+
+	function appendCell(row, text, className) {
+		var cell = document.createElement('td');
+		if (className) {
+			cell.className = className;
+		}
+		cell.textContent = text;
+		row.appendChild(cell);
+		return cell;
+	}
+
+	function makeStatusLabel(status) {
+		if (status === 'referenced') {
+			return strings.referenced || 'Referenced';
+		}
+		if (status === 'unreferenced') {
+			return strings.noReferences || 'No supported references found';
+		}
+		return strings.error || 'Needs review';
+	}
+
+	function renderResult(item) {
+		var row = document.createElement('tr');
+		row.dataset.status = item.status;
+
+		var mediaCell = document.createElement('td');
+		var title = document.createElement('strong');
+		var filename = document.createElement('code');
+		title.textContent = item.title || ('Media #' + item.id);
+		filename.textContent = item.filename || '';
+		mediaCell.appendChild(title);
+		mediaCell.appendChild(document.createElement('br'));
+		mediaCell.appendChild(filename);
+		row.appendChild(mediaCell);
+
+		appendCell(row, item.mimeType || '');
+
+		var statusCell = appendCell(row, makeStatusLabel(item.status));
+		statusCell.classList.add('mediarefinspector-bulk-status', 'is-' + item.status);
+
+		var types = Array.isArray(item.referenceTypes) ? item.referenceTypes.join(', ') : '';
+		appendCell(row, item.referenceCount ? item.referenceCount + (types ? ' · ' + types : '') : '0');
+
+		var actionsCell = document.createElement('td');
+		if (item.inspectUrl) {
+			var inspect = document.createElement('a');
+			inspect.className = 'button button-small';
+			inspect.href = item.inspectUrl;
+			inspect.textContent = strings.inspect || 'Inspect';
+			actionsCell.appendChild(inspect);
+		}
+		if (item.editAttachment) {
+			var edit = document.createElement('a');
+			edit.className = 'button button-small';
+			edit.href = item.editAttachment;
+			edit.textContent = strings.editMedia || 'Edit media';
+			actionsCell.appendChild(edit);
+		}
+		row.appendChild(actionsCell);
+		resultsBody.appendChild(row);
+	}
+
+	function renderError(id, message) {
+		var item = {
+			id: id,
+			title: 'Media #' + id,
+			filename: '',
+			mimeType: '',
+			referenceCount: 0,
+			referenceTypes: [],
+			status: 'error',
+			errorMessage: message || strings.failed || 'Scan failed.'
+		};
+		results.push(item);
+		renderResult(item);
+		updateSummary();
+	}
+
+	function scanOne(id) {
+		return request({
+			action: 'mediarefinspector_bulk_scan_item',
+			attachment_id: id
+		}).then(function (response) {
+			if (!response || !response.success || !response.data) {
+				throw new Error(response && response.data && response.data.message ? response.data.message : (strings.failed || 'Scan failed.'));
+			}
+			results.push(response.data);
+			renderResult(response.data);
+			updateSummary();
+		});
+	}
+
+	function runQueue(ids, index) {
+		if (stopped || index >= ids.length) {
+			finish(ids.length, stopped);
+			return Promise.resolve();
+		}
+
+		progressStatus.textContent = strings.scanning || 'Scanning media…';
+		updateProgress(index, ids.length);
+
+		return scanOne(ids[index]).catch(function (error) {
+			renderError(ids[index], error.message);
+		}).then(function () {
+			updateProgress(index + 1, ids.length);
+			return runQueue(ids, index + 1);
+		});
+	}
+
+	function finish(total, wasStopped) {
+		setRunning(false);
+		stopButton.disabled = false;
+		progressStatus.textContent = wasStopped ? (strings.cancelled || 'Bulk scan stopped.') : (strings.complete || 'Bulk scan complete.');
+		updateProgress(results.length, total || results.length);
+		summary.hidden = false;
+		filterRow.hidden = false;
+		tableWrap.hidden = results.length === 0;
+		emptyState.hidden = results.length > 0;
+		exportButton.disabled = results.length === 0;
+		applyResultFilter();
+	}
+
+	function applyResultFilter() {
+		var filter = resultFilter.value || 'all';
+		Array.prototype.forEach.call(resultsBody.querySelectorAll('tr'), function (row) {
+			row.hidden = filter !== 'all' && row.dataset.status !== filter;
+		});
+	}
+
+	function csvEscape(value) {
+		var text = String(value == null ? '' : value);
+		return '"' + text.replace(/"/g, '""') + '"';
+	}
+
+	function exportCsv() {
+		if (!results.length) {
+			return;
+		}
+
+		var rows = [
+			['Media ID', 'Title', 'Filename', 'MIME type', 'Status', 'Reference count', 'Reference types']
+		];
+		results.forEach(function (item) {
+			rows.push([
+				item.id,
+				item.title || '',
+				item.filename || '',
+				item.mimeType || '',
+				makeStatusLabel(item.status),
+				item.referenceCount || 0,
+				Array.isArray(item.referenceTypes) ? item.referenceTypes.join('; ') : ''
+			]);
+		});
+
+		var csv = rows.map(function (row) {
+			return row.map(csvEscape).join(',');
+		}).join('\r\n');
+		var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+		var link = document.createElement('a');
+		link.href = URL.createObjectURL(blob);
+		link.download = strings.csvFilename || 'media-reference-inspector-report.csv';
+		document.body.appendChild(link);
+		link.click();
+		URL.revokeObjectURL(link.href);
+		link.remove();
+	}
+
+	startButton.addEventListener('click', function () {
+		if (strings.confirmStart && !window.confirm(strings.confirmStart)) {
+			return;
+		}
+
+		resetView();
+		setRunning(true);
+
+		request({
+			action: 'mediarefinspector_get_bulk_ids',
+			search: searchInput.value || '',
+			media_type: typeInput.value || '',
+			limit: limitInput.value || '50'
+		}).then(function (response) {
+			if (!response || !response.success || !response.data || !Array.isArray(response.data.ids)) {
+				throw new Error(strings.failed || 'Bulk scan failed.');
+			}
+
+			var ids = response.data.ids;
+			if (!ids.length) {
+				setRunning(false);
+				progressStatus.textContent = strings.noItems || 'No media items matched these filters.';
+				progressCount.textContent = '0 / 0';
+				emptyState.hidden = false;
+				return;
+			}
+
+			updateProgress(0, ids.length);
+			return runQueue(ids, 0);
+		}).catch(function () {
+			setRunning(false);
+			progressStatus.textContent = strings.failed || 'The bulk scan could not be completed. Please try again.';
+			emptyState.hidden = false;
+		});
+	});
+
+	stopButton.addEventListener('click', function () {
+		stopped = true;
+		stopButton.disabled = true;
+	});
+
+	resultFilter.addEventListener('change', applyResultFilter);
+	exportButton.addEventListener('click', exportCsv);
+}());
