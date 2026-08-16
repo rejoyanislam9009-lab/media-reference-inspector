@@ -47,6 +47,7 @@ class MediaRefInspector_Plugin {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
 		add_action( 'wp_ajax_mediarefinspector_get_bulk_ids', array( $this, 'ajax_get_bulk_ids' ) );
 		add_action( 'wp_ajax_mediarefinspector_bulk_scan_item', array( $this, 'ajax_bulk_scan_item' ) );
+		add_action( 'admin_post_mediarefinspector_refresh_updates', array( $this, 'handle_refresh_updates' ) );
 		add_filter( 'media_row_actions', array( $this, 'add_media_row_action' ), 10, 3 );
 	}
 
@@ -160,6 +161,8 @@ class MediaRefInspector_Plugin {
 				<?php
 				if ( 'bulk' === $tab ) {
 					$this->render_bulk_tab();
+				} elseif ( 'diagnostics' === $tab ) {
+					$this->render_diagnostics_tab();
 				} elseif ( 'help' === $tab ) {
 					$this->render_help_tab();
 				} else {
@@ -180,8 +183,9 @@ class MediaRefInspector_Plugin {
 	private function render_header( $tab ) {
 		$tabs = array(
 			'scanner' => __( 'Scanner', 'media-reference-inspector' ),
-			'bulk'    => __( 'Bulk Scan', 'media-reference-inspector' ),
-			'help'    => __( 'Help', 'media-reference-inspector' ),
+			'bulk'        => __( 'Bulk Scan', 'media-reference-inspector' ),
+			'diagnostics' => __( 'Diagnostics', 'media-reference-inspector' ),
+			'help'        => __( 'Help', 'media-reference-inspector' ),
 		);
 		?>
 		<header class="mediarefinspector-header">
@@ -233,6 +237,13 @@ class MediaRefInspector_Plugin {
 				</div>
 			</div>
 
+			<div class="mediarefinspector-coverage-strip" aria-label="<?php echo esc_attr__( 'Reference coverage', 'media-reference-inspector' ); ?>">
+				<span><strong><?php esc_html_e( 'Core', 'media-reference-inspector' ); ?></strong><?php esc_html_e( 'Content, blocks, featured media, menus and theme settings', 'media-reference-inspector' ); ?></span>
+				<span><strong><?php esc_html_e( 'Widgets', 'media-reference-inspector' ); ?></strong><?php esc_html_e( 'Core media widgets and block widgets', 'media-reference-inspector' ); ?></span>
+				<span><strong><?php esc_html_e( 'WooCommerce', 'media-reference-inspector' ); ?></strong><?php esc_html_e( 'Product galleries and category thumbnails', 'media-reference-inspector' ); ?></span>
+				<span><strong><?php esc_html_e( 'Elementor', 'media-reference-inspector' ); ?></strong><?php esc_html_e( 'Validated saved media controls', 'media-reference-inspector' ); ?></span>
+			</div>
+
 			<?php $this->maybe_render_scan_results(); ?>
 			<?php $this->render_filter_form( 'scanner', $search, $type ); ?>
 			<?php $this->render_media_table( $search, $type, $paged ); ?>
@@ -270,11 +281,21 @@ class MediaRefInspector_Plugin {
 					</select>
 				</div>
 				<div class="mediarefinspector-field">
+					<label for="mediarefinspector-bulk-age"><?php esc_html_e( 'Uploaded', 'media-reference-inspector' ); ?></label>
+					<select id="mediarefinspector-bulk-age">
+						<option value="0"><?php esc_html_e( 'Any time', 'media-reference-inspector' ); ?></option>
+						<option value="30"><?php esc_html_e( 'Last 30 days', 'media-reference-inspector' ); ?></option>
+						<option value="90"><?php esc_html_e( 'Last 90 days', 'media-reference-inspector' ); ?></option>
+						<option value="365"><?php esc_html_e( 'Last year', 'media-reference-inspector' ); ?></option>
+					</select>
+				</div>
+				<div class="mediarefinspector-field">
 					<label for="mediarefinspector-bulk-limit"><?php esc_html_e( 'Maximum items', 'media-reference-inspector' ); ?></label>
 					<select id="mediarefinspector-bulk-limit">
 						<option value="25">25</option>
-						<option value="50" selected>50</option>
-						<option value="100">100</option>
+						<option value="50">50</option>
+						<option value="100" selected>100</option>
+						<option value="250">250</option>
 					</select>
 				</div>
 				<div class="mediarefinspector-field mediarefinspector-field-action">
@@ -347,13 +368,14 @@ class MediaRefInspector_Plugin {
 						<li><?php esc_html_e( 'Post, page, and custom post type content and excerpts', 'media-reference-inspector' ); ?></li>
 						<li><?php esc_html_e( 'Generated image-size URLs and WordPress media blocks', 'media-reference-inspector' ); ?></li>
 						<li><?php esc_html_e( 'Featured images and navigation menu URLs', 'media-reference-inspector' ); ?></li>
+						<li><?php esc_html_e( 'Core media widgets and block widgets', 'media-reference-inspector' ); ?></li>
 						<li><?php esc_html_e( 'Site Icon, Site Logo, Custom Logo, Header Image, and Background Image', 'media-reference-inspector' ); ?></li>
 					</ul>
 				</div>
 				<div class="mediarefinspector-panel">
 					<h3><?php esc_html_e( 'Integration-aware checks', 'media-reference-inspector' ); ?></h3>
 					<ul class="mediarefinspector-check-list">
-						<li><?php esc_html_e( 'WooCommerce product gallery attachment IDs', 'media-reference-inspector' ); ?></li>
+						<li><?php esc_html_e( 'WooCommerce product gallery and product-category thumbnail attachment IDs', 'media-reference-inspector' ); ?></li>
 						<li><?php esc_html_e( 'Elementor media-control data saved in Elementor JSON', 'media-reference-inspector' ); ?></li>
 					</ul>
 					<p class="description"><?php esc_html_e( 'These checks are passive: if matching plugin data is not present, no extra work is performed beyond the focused lookups.', 'media-reference-inspector' ); ?></p>
@@ -362,6 +384,104 @@ class MediaRefInspector_Plugin {
 					<h3><?php esc_html_e( 'Important limitation', 'media-reference-inspector' ); ?></h3>
 					<p><?php esc_html_e( 'No scanner can prove that media is unused across every custom table, external service, theme, builder, shortcode, cache, or custom code path. Treat results as evidence for review, not as automatic deletion instructions.', 'media-reference-inspector' ); ?></p>
 				</div>
+			</div>
+		</section>
+		<?php
+	}
+
+
+	/**
+	 * Handles a manual refresh of WordPress core plugin update metadata.
+	 *
+	 * This changes only WordPress' update cache/transient; it does not modify
+	 * media, content, plugin settings, or external data.
+	 *
+	 * @return void
+	 */
+	public function handle_refresh_updates() {
+		if ( ! current_user_can( 'update_plugins' ) ) {
+			wp_die( esc_html__( 'You do not have permission to refresh update information.', 'media-reference-inspector' ) );
+		}
+
+		check_admin_referer( 'mediarefinspector_refresh_updates' );
+
+		if ( ! function_exists( 'wp_clean_plugins_cache' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+		wp_clean_plugins_cache( true );
+		wp_update_plugins();
+
+		$url = add_query_arg(
+			array(
+				'page'      => 'media-reference-inspector',
+				'tab'       => 'diagnostics',
+				'refreshed' => '1',
+			),
+			admin_url( 'upload.php' )
+		);
+		wp_safe_redirect( $url );
+		exit;
+	}
+
+	/**
+	 * Renders environment and WordPress.org update diagnostics.
+	 *
+	 * @return void
+	 */
+	private function render_diagnostics_tab() {
+		$plugin_file = plugin_basename( MEDIAREFINSPECTOR_FILE );
+		$updates     = get_site_transient( 'update_plugins' );
+		$response    = is_object( $updates ) && isset( $updates->response[ $plugin_file ] ) ? $updates->response[ $plugin_file ] : null;
+		$no_update   = is_object( $updates ) && isset( $updates->no_update[ $plugin_file ] ) ? $updates->no_update[ $plugin_file ] : null;
+		$checked     = is_object( $updates ) && isset( $updates->checked[ $plugin_file ] ) ? (string) $updates->checked[ $plugin_file ] : '';
+		$last_check  = is_object( $updates ) && ! empty( $updates->last_checked ) ? absint( $updates->last_checked ) : 0;
+		$last_age    = $last_check ? human_time_diff( $last_check, time() ) : __( 'Not available', 'media-reference-inspector' );
+		$status      = __( 'No update response cached', 'media-reference-inspector' );
+		$status_type = 'neutral';
+		$remote      = '';
+
+		if ( is_object( $response ) ) {
+			$remote      = isset( $response->new_version ) ? (string) $response->new_version : '';
+			$status      = $remote ? sprintf( __( 'Update available: %s', 'media-reference-inspector' ), $remote ) : __( 'Update available', 'media-reference-inspector' );
+			$status_type = 'success';
+		} elseif ( is_object( $no_update ) ) {
+			$remote      = isset( $no_update->new_version ) ? (string) $no_update->new_version : '';
+			$status      = __( 'WordPress currently reports no update for this installed version', 'media-reference-inspector' );
+			$status_type = 'neutral';
+		}
+		?>
+		<section class="mediarefinspector-section" aria-labelledby="mediarefinspector-diagnostics-heading">
+			<div class="mediarefinspector-section-heading mediarefinspector-section-heading-split">
+				<div>
+					<h2 id="mediarefinspector-diagnostics-heading"><?php esc_html_e( 'Diagnostics & update status', 'media-reference-inspector' ); ?></h2>
+					<p><?php esc_html_e( 'Inspect the exact plugin basename and WordPress core update cache used to decide whether an Update now row is displayed.', 'media-reference-inspector' ); ?></p>
+				</div>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+					<input type="hidden" name="action" value="mediarefinspector_refresh_updates" />
+					<?php wp_nonce_field( 'mediarefinspector_refresh_updates' ); ?>
+					<button class="button button-secondary" type="submit"><?php esc_html_e( 'Refresh WordPress update status', 'media-reference-inspector' ); ?></button>
+				</form>
+			</div>
+
+			<?php if ( isset( $_GET['refreshed'] ) ) : ?>
+				<div class="notice notice-success inline"><p><?php esc_html_e( 'WordPress plugin update metadata was refreshed.', 'media-reference-inspector' ); ?></p></div>
+			<?php endif; ?>
+
+			<div class="mediarefinspector-diagnostics-grid">
+				<div class="mediarefinspector-panel"><span class="mediarefinspector-eyebrow"><?php esc_html_e( 'Installed plugin', 'media-reference-inspector' ); ?></span><h3><?php echo esc_html( MEDIAREFINSPECTOR_VERSION ); ?></h3><p><code><?php echo esc_html( $plugin_file ); ?></code></p></div>
+				<div class="mediarefinspector-panel"><span class="mediarefinspector-eyebrow"><?php esc_html_e( 'Update status', 'media-reference-inspector' ); ?></span><h3 class="mediarefinspector-diagnostic-status is-<?php echo esc_attr( $status_type ); ?>"><?php echo esc_html( $status ); ?></h3><p><?php echo esc_html( sprintf( __( 'Last core update check: %s ago', 'media-reference-inspector' ), $last_age ) ); ?></p></div>
+				<div class="mediarefinspector-panel"><span class="mediarefinspector-eyebrow"><?php esc_html_e( 'WordPress environment', 'media-reference-inspector' ); ?></span><h3><?php echo esc_html( get_bloginfo( 'version' ) ); ?></h3><p><?php echo esc_html( sprintf( __( 'PHP %s', 'media-reference-inspector' ), PHP_VERSION ) ); ?></p></div>
+			</div>
+
+			<div class="mediarefinspector-panel mediarefinspector-diagnostics-details">
+				<h3><?php esc_html_e( 'Update matching details', 'media-reference-inspector' ); ?></h3>
+				<dl>
+					<dt><?php esc_html_e( 'Expected plugin basename', 'media-reference-inspector' ); ?></dt><dd><code>media-reference-inspector/media-reference-inspector.php</code></dd>
+					<dt><?php esc_html_e( 'Actual plugin basename', 'media-reference-inspector' ); ?></dt><dd><code><?php echo esc_html( $plugin_file ); ?></code></dd>
+					<dt><?php esc_html_e( 'Version recorded by core', 'media-reference-inspector' ); ?></dt><dd><?php echo esc_html( $checked ? $checked : __( 'Not available', 'media-reference-inspector' ) ); ?></dd>
+					<dt><?php esc_html_e( 'Version in current update response', 'media-reference-inspector' ); ?></dt><dd><?php echo esc_html( $remote ? $remote : __( 'Not available', 'media-reference-inspector' ) ); ?></dd>
+				</dl>
+				<p class="description"><?php esc_html_e( 'WordPress displays an update row only when the update_plugins transient contains a response keyed by this exact plugin basename. WordPress.org may delay distribution of a newly published release before that response appears.', 'media-reference-inspector' ); ?></p>
 			</div>
 		</section>
 		<?php
@@ -566,8 +686,12 @@ class MediaRefInspector_Plugin {
 
 		$search = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
 		$type   = isset( $_POST['media_type'] ) ? sanitize_key( wp_unslash( $_POST['media_type'] ) ) : '';
-		$limit  = isset( $_POST['limit'] ) ? absint( $_POST['limit'] ) : 50;
-		$limit  = min( 100, max( 1, $limit ) );
+		$limit  = isset( $_POST['limit'] ) ? absint( $_POST['limit'] ) : 100;
+		$limit  = min( 250, max( 1, $limit ) );
+		$age    = isset( $_POST['age'] ) ? absint( $_POST['age'] ) : 0;
+		if ( ! in_array( $age, array( 0, 30, 90, 365 ), true ) ) {
+			$age = 0;
+		}
 
 		if ( ! in_array( $type, array( '', 'image', 'video', 'audio', 'application' ), true ) ) {
 			$type = '';
@@ -587,6 +711,14 @@ class MediaRefInspector_Plugin {
 		}
 		if ( '' !== $type ) {
 			$args['post_mime_type'] = $type;
+		}
+		if ( $age ) {
+			$args['date_query'] = array(
+				array(
+					'after'     => $age . ' days ago',
+					'inclusive' => true,
+				),
+			);
 		}
 
 		$query = new WP_Query( $args );
@@ -623,6 +755,9 @@ class MediaRefInspector_Plugin {
 				'title'          => $media['title'],
 				'filename'       => $media['filename'],
 				'mimeType'       => $media['mime_type'],
+				'url'            => $media['url'],
+				'fileSize'       => $media['file_size'],
+				'uploadedDate'   => $media['date'],
 				'referenceCount' => count( $usages ),
 				'referenceTypes' => array_values( array_unique( $types ) ),
 				'status'         => empty( $usages ) ? 'unreferenced' : 'referenced',
@@ -676,10 +811,12 @@ class MediaRefInspector_Plugin {
 			$meta_parts[] = absint( $metadata['width'] ) . '×' . absint( $metadata['height'] );
 		}
 
+		$file_size = 0;
 		if ( $file && file_exists( $file ) ) {
-			$size = filesize( $file );
-			if ( false !== $size ) {
-				$meta_parts[] = size_format( $size, 1 );
+			$raw_size = filesize( $file );
+			if ( false !== $raw_size ) {
+				$file_size    = (int) $raw_size;
+				$meta_parts[] = size_format( $file_size, 1 );
 			}
 		}
 
@@ -694,6 +831,9 @@ class MediaRefInspector_Plugin {
 			'mime_type' => $mime_type,
 			'preview'   => $preview,
 			'meta'      => implode( ' · ', $meta_parts ),
+			'url'       => (string) wp_get_attachment_url( $attachment_id ),
+			'file_size' => $file_size,
+			'date'      => (string) $date,
 		);
 	}
 
@@ -810,7 +950,7 @@ class MediaRefInspector_Plugin {
 	private function get_current_tab() {
 		$tab = filter_input( INPUT_GET, 'tab', FILTER_UNSAFE_RAW );
 		$tab = is_string( $tab ) ? sanitize_key( $tab ) : 'scanner';
-		return in_array( $tab, array( 'scanner', 'bulk', 'help' ), true ) ? $tab : 'scanner';
+		return in_array( $tab, array( 'scanner', 'bulk', 'diagnostics', 'help' ), true ) ? $tab : 'scanner';
 	}
 
 	/**

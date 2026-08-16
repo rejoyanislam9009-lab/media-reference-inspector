@@ -23,6 +23,7 @@
 	var searchInput = document.getElementById('mediarefinspector-bulk-search');
 	var typeInput = document.getElementById('mediarefinspector-bulk-type');
 	var limitInput = document.getElementById('mediarefinspector-bulk-limit');
+	var ageInput = document.getElementById('mediarefinspector-bulk-age');
 	var strings = config.strings || {};
 	var stopped = false;
 	var results = [];
@@ -52,6 +53,9 @@
 		searchInput.disabled = isRunning;
 		typeInput.disabled = isRunning;
 		limitInput.disabled = isRunning;
+		if (ageInput) {
+			ageInput.disabled = isRunning;
+		}
 	}
 
 	function resetView() {
@@ -242,14 +246,17 @@
 		}
 
 		var rows = [
-			['Media ID', 'Title', 'Filename', 'MIME type', 'Status', 'Reference count', 'Reference types']
+			['Media ID', 'Title', 'Filename', 'Media URL', 'MIME type', 'File size (bytes)', 'Uploaded date', 'Status', 'Reference count', 'Reference types']
 		];
 		results.forEach(function (item) {
 			rows.push([
 				item.id,
 				item.title || '',
 				item.filename || '',
+				item.url || '',
 				item.mimeType || '',
+				item.fileSize || 0,
+				item.uploadedDate || '',
 				makeStatusLabel(item.status),
 				item.referenceCount || 0,
 				Array.isArray(item.referenceTypes) ? item.referenceTypes.join('; ') : ''
@@ -281,7 +288,8 @@
 			action: 'mediarefinspector_get_bulk_ids',
 			search: searchInput.value || '',
 			media_type: typeInput.value || '',
-			limit: limitInput.value || '50'
+			age: ageInput ? (ageInput.value || '0') : '0',
+			limit: limitInput.value || '100'
 		}).then(function (response) {
 			if (!response || !response.success || !response.data || !Array.isArray(response.data.ids)) {
 				throw new Error(strings.failed || 'Bulk scan failed.');
