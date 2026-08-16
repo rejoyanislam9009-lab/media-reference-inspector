@@ -19,6 +19,9 @@ jobs:
           ref: agent/2.2.0-beta-media-audit
           fetch-depth: 0
 
+      - name: Normalize patch anchors
+        run: python3 .github/scripts/normalize-beta2-anchors.py
+
       - name: Apply beta.2 UI changes
         run: python3 .github/scripts/build-2.2.0-beta2.py
 
