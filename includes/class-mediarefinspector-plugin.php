@@ -47,7 +47,7 @@ class MediaRefInspector_Plugin {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
 		add_action( 'wp_ajax_mediarefinspector_get_bulk_ids', array( $this, 'ajax_get_bulk_ids' ) );
 		add_action( 'wp_ajax_mediarefinspector_bulk_scan_item', array( $this, 'ajax_bulk_scan_item' ) );
-		add_action( 'admin_post_mediarefinspector_refresh_updates', array( $this, 'handle_refresh_updates' ) );
+		add_action( 'admin_post_mediarefinspector_send_support_email', array( $this, 'handle_support_email' ) );
 		add_filter( 'media_row_actions', array( $this, 'add_media_row_action' ), 10, 3 );
 	}
 
@@ -161,8 +161,10 @@ class MediaRefInspector_Plugin {
 				<?php
 				if ( 'bulk' === $tab ) {
 					$this->render_bulk_tab();
-				} elseif ( 'diagnostics' === $tab ) {
-					$this->render_diagnostics_tab();
+				} elseif ( 'audit' === $tab ) {
+					$this->render_audit_tab();
+				} elseif ( 'duplicates' === $tab ) {
+					$this->render_duplicates_tab();
 				} elseif ( 'help' === $tab ) {
 					$this->render_help_tab();
 				} else {
@@ -172,6 +174,7 @@ class MediaRefInspector_Plugin {
 			</div>
 		</div>
 		<?php
+		$this->mark_feature_seen( $tab );
 	}
 
 	/**
@@ -182,10 +185,11 @@ class MediaRefInspector_Plugin {
 	 */
 	private function render_header( $tab ) {
 		$tabs = array(
-			'scanner' => __( 'Scanner', 'media-reference-inspector' ),
-			'bulk'        => __( 'Bulk Scan', 'media-reference-inspector' ),
-			'diagnostics' => __( 'Diagnostics', 'media-reference-inspector' ),
-			'help'        => __( 'Help', 'media-reference-inspector' ),
+			'scanner'    => __( 'Scanner', 'media-reference-inspector' ),
+			'bulk'       => __( 'Bulk Scan', 'media-reference-inspector' ),
+			'audit'      => __( 'Page Audit', 'media-reference-inspector' ),
+			'duplicates' => __( 'Duplicates', 'media-reference-inspector' ),
+			'help'       => __( 'Help', 'media-reference-inspector' ),
 		);
 		?>
 		<header class="mediarefinspector-header">
@@ -212,7 +216,7 @@ class MediaRefInspector_Plugin {
 						admin_url( 'upload.php' )
 					);
 					?>
-					<a class="nav-tab <?php echo $tab === $tab_key ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( $url ); ?>" <?php echo $tab === $tab_key ? 'aria-current="page"' : ''; ?>><?php echo esc_html( $label ); ?></a>
+					<a class="nav-tab <?php echo $tab === $tab_key ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( $url ); ?>" <?php echo $tab === $tab_key ? 'aria-current="page"' : ''; ?>><?php echo esc_html( $label ); ?><?php if ( $this->is_new_feature( $tab_key ) ) : ?><span class="mediarefinspector-new-badge"><?php esc_html_e( 'NEW', 'media-reference-inspector' ); ?></span><?php endif; ?></a>
 				<?php endforeach; ?>
 			</nav>
 		</header>
@@ -242,8 +246,10 @@ class MediaRefInspector_Plugin {
 				<span><strong><?php esc_html_e( 'Widgets', 'media-reference-inspector' ); ?></strong><?php esc_html_e( 'Core media widgets and block widgets', 'media-reference-inspector' ); ?></span>
 				<span><strong><?php esc_html_e( 'WooCommerce', 'media-reference-inspector' ); ?></strong><?php esc_html_e( 'Product galleries and category thumbnails', 'media-reference-inspector' ); ?></span>
 				<span><strong><?php esc_html_e( 'Elementor', 'media-reference-inspector' ); ?></strong><?php esc_html_e( 'Validated saved media controls', 'media-reference-inspector' ); ?></span>
+				<span><strong><?php esc_html_e( 'ACF', 'media-reference-inspector' ); ?></strong><?php esc_html_e( 'Confirmed Image, File and Gallery field references', 'media-reference-inspector' ); ?></span>
 			</div>
 
+			<?php $this->render_whats_new_panel(); ?>
 			<?php $this->maybe_render_scan_results(); ?>
 			<?php $this->render_filter_form( 'scanner', $search, $type ); ?>
 			<?php $this->render_media_table( $search, $type, $paged ); ?>
@@ -320,13 +326,10 @@ class MediaRefInspector_Plugin {
 			</div>
 
 			<div class="mediarefinspector-bulk-filter-row" id="mediarefinspector-bulk-filter-row" hidden>
-				<label for="mediarefinspector-result-filter"><?php esc_html_e( 'Show results', 'media-reference-inspector' ); ?></label>
-				<select id="mediarefinspector-result-filter">
-					<option value="all"><?php esc_html_e( 'All results', 'media-reference-inspector' ); ?></option>
-					<option value="referenced"><?php esc_html_e( 'Referenced', 'media-reference-inspector' ); ?></option>
-					<option value="unreferenced"><?php esc_html_e( 'No supported references', 'media-reference-inspector' ); ?></option>
-					<option value="error"><?php esc_html_e( 'Needs review', 'media-reference-inspector' ); ?></option>
-				</select>
+				<div><label for="mediarefinspector-result-filter"><?php esc_html_e( 'Show results', 'media-reference-inspector' ); ?></label>
+				<select id="mediarefinspector-result-filter"><option value="all"><?php esc_html_e( 'All results', 'media-reference-inspector' ); ?></option><option value="referenced"><?php esc_html_e( 'Referenced', 'media-reference-inspector' ); ?></option><option value="unreferenced"><?php esc_html_e( 'Potential unused review', 'media-reference-inspector' ); ?></option><option value="error"><?php esc_html_e( 'Needs review', 'media-reference-inspector' ); ?></option></select></div>
+				<div><label for="mediarefinspector-result-sort"><?php esc_html_e( 'Sort results', 'media-reference-inspector' ); ?></label>
+				<select id="mediarefinspector-result-sort"><option value="scan"><?php esc_html_e( 'Scan order', 'media-reference-inspector' ); ?></option><option value="references-desc"><?php esc_html_e( 'Most references', 'media-reference-inspector' ); ?></option><option value="references-asc"><?php esc_html_e( 'Fewest references', 'media-reference-inspector' ); ?></option><option value="title"><?php esc_html_e( 'Title A–Z', 'media-reference-inspector' ); ?></option></select></div>
 			</div>
 
 			<div class="mediarefinspector-empty-state" id="mediarefinspector-bulk-empty">
@@ -347,12 +350,155 @@ class MediaRefInspector_Plugin {
 		<?php
 	}
 
+
 	/**
-	 * Renders contextual help and supported checks.
+	 * Shows a compact What's New card until new feature tabs have been visited.
+	 *
+	 * @return void
+	 */
+	private function render_whats_new_panel() {
+		if ( ! $this->is_new_feature( 'audit' ) && ! $this->is_new_feature( 'duplicates' ) ) {
+			return;
+		}
+		?>
+		<div class="mediarefinspector-whats-new mediarefinspector-panel">
+			<div><span class="mediarefinspector-new-badge"><?php esc_html_e( 'NEW', 'media-reference-inspector' ); ?></span><strong><?php esc_html_e( 'New audit tools are ready to test', 'media-reference-inspector' ); ?></strong></div>
+			<p><?php esc_html_e( 'Audit media used by a page or post, check broken attachment IDs and file health, find exact duplicate files, and detect confirmed ACF media fields.', 'media-reference-inspector' ); ?></p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Renders page/post media audit results.
+	 *
+	 * @return void
+	 */
+	private function render_audit_tab() {
+		$search  = isset( $_GET['audit_s'] ) ? sanitize_text_field( wp_unslash( $_GET['audit_s'] ) ) : '';
+		$post_id = isset( $_GET['audit_post_id'] ) ? absint( $_GET['audit_post_id'] ) : 0;
+		?>
+		<section class="mediarefinspector-section" aria-labelledby="mediarefinspector-audit-heading">
+			<div class="mediarefinspector-section-heading"><div><h2 id="mediarefinspector-audit-heading"><?php esc_html_e( 'Page & post media audit', 'media-reference-inspector' ); ?> <span class="mediarefinspector-new-badge"><?php esc_html_e( 'NEW', 'media-reference-inspector' ); ?></span></h2><p><?php esc_html_e( 'Choose a post or page to see supported media references, broken attachment IDs, and local file-health information. Nothing is modified.', 'media-reference-inspector' ); ?></p></div></div>
+			<form method="get" class="mediarefinspector-filter-form"><input type="hidden" name="page" value="media-reference-inspector" /><input type="hidden" name="tab" value="audit" /><div class="mediarefinspector-field mediarefinspector-field-grow"><label for="mediarefinspector-audit-search"><?php esc_html_e( 'Search posts/pages', 'media-reference-inspector' ); ?></label><input id="mediarefinspector-audit-search" type="search" name="audit_s" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php echo esc_attr__( 'Search title', 'media-reference-inspector' ); ?>" /></div><div class="mediarefinspector-field mediarefinspector-field-action"><button class="button button-secondary" type="submit"><?php esc_html_e( 'Search', 'media-reference-inspector' ); ?></button></div></form>
+			<?php
+			if ( $post_id ) {
+				$nonce = isset( $_GET['mediarefinspector_audit_nonce'] ) ? sanitize_text_field( wp_unslash( $_GET['mediarefinspector_audit_nonce'] ) ) : '';
+				if ( wp_verify_nonce( $nonce, 'mediarefinspector_audit_post_' . $post_id ) ) {
+					$this->render_post_audit_result( $post_id );
+				} else {
+					$this->render_notice( __( 'The audit request could not be verified. Please choose the post again.', 'media-reference-inspector' ), 'error' );
+				}
+			}
+			$post_types = get_post_types( array( 'public' => true ), 'names' );
+			unset( $post_types['attachment'] );
+			$args = array( 'post_type' => array_values( $post_types ), 'post_status' => array( 'publish', 'draft', 'pending', 'private' ), 'posts_per_page' => 30, 'orderby' => 'modified', 'order' => 'DESC' );
+			if ( $search ) { $args['s'] = $search; }
+			$query = new WP_Query( $args );
+			?>
+			<div class="mediarefinspector-audit-list">
+			<?php foreach ( $query->posts as $post ) : $url = wp_nonce_url( add_query_arg( array( 'page' => 'media-reference-inspector', 'tab' => 'audit', 'audit_post_id' => $post->ID, 'audit_s' => $search ), admin_url( 'upload.php' ) ), 'mediarefinspector_audit_post_' . $post->ID, 'mediarefinspector_audit_nonce' ); ?>
+				<article class="mediarefinspector-panel mediarefinspector-audit-item"><div><strong><?php echo esc_html( get_the_title( $post ) ? get_the_title( $post ) : sprintf( __( 'Post #%d', 'media-reference-inspector' ), $post->ID ) ); ?></strong><p><?php echo esc_html( $post->post_type . ' · ' . $post->post_status . ' · #' . $post->ID ); ?></p></div><a class="button" href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( 'Audit media', 'media-reference-inspector' ); ?></a></article>
+			<?php endforeach; ?>
+			</div>
+		</section>
+		<?php
+	}
+
+	/**
+	 * Renders one post audit result.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return void
+	 */
+	private function render_post_audit_result( $post_id ) {
+		$service = new MediaRefInspector_Audit_Service();
+		$result  = $service->audit_post( $post_id );
+		$post    = get_post( $post_id );
+		if ( ! $post ) { return; }
+		?>
+		<div class="mediarefinspector-panel mediarefinspector-audit-result"><div class="mediarefinspector-section-heading mediarefinspector-section-heading-split"><div><span class="mediarefinspector-eyebrow"><?php esc_html_e( 'Audit result', 'media-reference-inspector' ); ?></span><h3><?php echo esc_html( get_the_title( $post ) ? get_the_title( $post ) : '#' . $post_id ); ?></h3></div><div class="mediarefinspector-audit-counts"><span><strong><?php echo esc_html( (string) count( $result['media'] ) ); ?></strong> <?php esc_html_e( 'media found', 'media-reference-inspector' ); ?></span><span class="<?php echo empty( $result['broken'] ) ? 'is-success' : 'is-warning'; ?>"><strong><?php echo esc_html( (string) count( $result['broken'] ) ); ?></strong> <?php esc_html_e( 'broken IDs', 'media-reference-inspector' ); ?></span></div></div>
+		<?php if ( ! empty( $result['broken'] ) ) : ?><div class="notice notice-warning inline"><p><strong><?php esc_html_e( 'Broken media references need review.', 'media-reference-inspector' ); ?></strong> <?php esc_html_e( 'These attachment IDs are referenced in supported content but no longer resolve to Media Library attachments:', 'media-reference-inspector' ); ?> <?php echo esc_html( implode( ', ', wp_list_pluck( $result['broken'], 'id' ) ) ); ?></p></div><?php endif; ?>
+		<div class="mediarefinspector-audit-media-grid">
+		<?php foreach ( $result['media'] as $item ) : ?>
+			<article class="mediarefinspector-audit-media"><div><strong><?php echo esc_html( $item['title'] ? $item['title'] : sprintf( __( 'Media #%d', 'media-reference-inspector' ), $item['id'] ) ); ?></strong><p><?php echo esc_html( implode( ' · ', $item['sources'] ) ); ?></p></div><span class="mediarefinspector-health-pill is-<?php echo esc_attr( $item['health']['status'] ); ?>"><?php echo esc_html( 'healthy' === $item['health']['status'] ? __( 'File healthy', 'media-reference-inspector' ) : __( 'Needs review', 'media-reference-inspector' ) ); ?></span><a class="button button-small" href="<?php echo esc_url( get_edit_post_link( $item['id'], 'raw' ) ); ?>"><?php esc_html_e( 'Edit media', 'media-reference-inspector' ); ?></a></article>
+		<?php endforeach; ?>
+		</div></div>
+		<?php
+	}
+
+	/**
+	 * Renders the exact duplicate-file finder.
+	 *
+	 * @return void
+	 */
+	private function render_duplicates_tab() {
+		$run = isset( $_GET['run_duplicates'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['run_duplicates'] ) );
+		?>
+		<section class="mediarefinspector-section" aria-labelledby="mediarefinspector-duplicates-heading"><div class="mediarefinspector-section-heading mediarefinspector-section-heading-split"><div><h2 id="mediarefinspector-duplicates-heading"><?php esc_html_e( 'Potential duplicate media', 'media-reference-inspector' ); ?> <span class="mediarefinspector-new-badge"><?php esc_html_e( 'NEW', 'media-reference-inspector' ); ?></span></h2><p><?php esc_html_e( 'Compare a bounded set of local media files by exact file hash. This tool reports matches only and never deletes anything.', 'media-reference-inspector' ); ?></p></div><?php $run_url = wp_nonce_url( add_query_arg( array( 'page' => 'media-reference-inspector', 'tab' => 'duplicates', 'run_duplicates' => '1' ), admin_url( 'upload.php' ) ), 'mediarefinspector_run_duplicates', 'mediarefinspector_duplicates_nonce' ); ?><a class="button button-primary" href="<?php echo esc_url( $run_url ); ?>"><?php esc_html_e( 'Scan recent 150 files', 'media-reference-inspector' ); ?></a></div>
+		<?php
+		if ( $run ) {
+			$nonce = isset( $_GET['mediarefinspector_duplicates_nonce'] ) ? sanitize_text_field( wp_unslash( $_GET['mediarefinspector_duplicates_nonce'] ) ) : '';
+			if ( ! wp_verify_nonce( $nonce, 'mediarefinspector_run_duplicates' ) ) { $this->render_notice( __( 'The duplicate scan request could not be verified.', 'media-reference-inspector' ), 'error' ); return; }
+			$groups = ( new MediaRefInspector_Audit_Service() )->find_exact_duplicates( 150 );
+			if ( empty( $groups ) ) { $this->render_notice( __( 'No exact duplicate files were found in the bounded scan.', 'media-reference-inspector' ), 'success' ); }
+			foreach ( $groups as $index => $group ) : ?>
+				<div class="mediarefinspector-panel mediarefinspector-duplicate-group"><h3><?php echo esc_html( sprintf( __( 'Duplicate group %1$d · %2$s each', 'media-reference-inspector' ), $index + 1, size_format( $group['size'], 1 ) ) ); ?></h3><?php foreach ( $group['items'] as $item ) : ?><div class="mediarefinspector-duplicate-item"><div><strong><?php echo esc_html( $item['title'] ? $item['title'] : $item['filename'] ); ?></strong><code><?php echo esc_html( $item['filename'] ); ?></code></div><?php if ( $item['edit_url'] ) : ?><a class="button button-small" href="<?php echo esc_url( $item['edit_url'] ); ?>"><?php esc_html_e( 'Review media', 'media-reference-inspector' ); ?></a><?php endif; ?></div><?php endforeach; ?></div>
+			<?php endforeach;
+		} else { ?>
+			<div class="mediarefinspector-empty-state"><span class="dashicons dashicons-images-alt2" aria-hidden="true"></span><h3><?php esc_html_e( 'Ready for an exact duplicate scan', 'media-reference-inspector' ); ?></h3><p><?php esc_html_e( 'For performance, the scan is limited to the most recent 150 readable files and skips files larger than 25 MB.', 'media-reference-inspector' ); ?></p></div>
+		<?php } ?>
+		</section>
+		<?php
+	}
+
+	/**
+	 * Renders local file-health details for one attachment.
+	 *
+	 * @param int $attachment_id Attachment ID.
+	 * @return void
+	 */
+	private function render_file_health( $attachment_id ) {
+		$health = ( new MediaRefInspector_Audit_Service() )->get_file_health( $attachment_id );
+		?>
+		<div class="mediarefinspector-panel mediarefinspector-file-health"><div class="mediarefinspector-file-health-title"><h3><?php esc_html_e( 'Media file health', 'media-reference-inspector' ); ?></h3><span class="mediarefinspector-health-pill is-<?php echo esc_attr( $health['status'] ); ?>"><?php echo esc_html( 'healthy' === $health['status'] ? __( 'Healthy', 'media-reference-inspector' ) : __( 'Needs review', 'media-reference-inspector' ) ); ?></span></div><div class="mediarefinspector-health-grid"><span><strong><?php esc_html_e( 'Local file', 'media-reference-inspector' ); ?></strong><?php echo esc_html( $health['file_exists'] ? __( 'Found', 'media-reference-inspector' ) : __( 'Missing', 'media-reference-inspector' ) ); ?></span><span><strong><?php esc_html_e( 'Original image', 'media-reference-inspector' ); ?></strong><?php echo esc_html( $health['original_exists'] ? __( 'Available / not required', 'media-reference-inspector' ) : __( 'Missing', 'media-reference-inspector' ) ); ?></span><span><strong><?php esc_html_e( 'Metadata', 'media-reference-inspector' ); ?></strong><?php echo esc_html( $health['metadata_ok'] ? __( 'Looks valid', 'media-reference-inspector' ) : __( 'Incomplete', 'media-reference-inspector' ) ); ?></span><span><strong><?php esc_html_e( 'File details', 'media-reference-inspector' ); ?></strong><?php echo esc_html( trim( ( $health['width'] && $health['height'] ? $health['width'] . '×' . $health['height'] . ' · ' : '' ) . ( $health['file_size'] ? size_format( $health['file_size'], 1 ) : __( 'Size unavailable', 'media-reference-inspector' ) ) ) ); ?></span></div></div>
+		<?php
+	}
+
+	/**
+	 * Returns whether a feature should still display its per-user NEW badge.
+	 *
+	 * @param string $feature Feature key.
+	 * @return bool
+	 */
+	private function is_new_feature( $feature ) {
+		if ( ! in_array( $feature, array( 'audit', 'duplicates' ), true ) ) { return false; }
+		$seen = get_user_meta( get_current_user_id(), 'mediarefinspector_seen_features_220', true );
+		$seen = is_array( $seen ) ? $seen : array();
+		return empty( $seen[ $feature ] );
+	}
+
+	/**
+	 * Marks the current feature tab as seen after rendering.
+	 *
+	 * @param string $feature Feature key.
+	 * @return void
+	 */
+	private function mark_feature_seen( $feature ) {
+		if ( ! in_array( $feature, array( 'audit', 'duplicates' ), true ) ) { return; }
+		$seen = get_user_meta( get_current_user_id(), 'mediarefinspector_seen_features_220', true );
+		$seen = is_array( $seen ) ? $seen : array();
+		$seen[ $feature ] = 1;
+		update_user_meta( get_current_user_id(), 'mediarefinspector_seen_features_220', $seen );
+	}
+
+	/**
+	 * Renders contextual help and plugin support.
 	 *
 	 * @return void
 	 */
 	private function render_help_tab() {
+		$current_user  = wp_get_current_user();
+		$support_state = isset( $_GET['support_status'] ) ? sanitize_key( wp_unslash( $_GET['support_status'] ) ) : '';
 		?>
 		<section class="mediarefinspector-section" aria-labelledby="mediarefinspector-help-heading">
 			<div class="mediarefinspector-section-heading">
@@ -361,6 +507,17 @@ class MediaRefInspector_Plugin {
 					<p><?php esc_html_e( 'The scanner checks supported WordPress and integration data locally. It does not send media or site data to an external service.', 'media-reference-inspector' ); ?></p>
 				</div>
 			</div>
+
+			<?php if ( 'sent' === $support_state ) : ?>
+				<div class="notice notice-success inline mediarefinspector-inline-notice"><p><?php esc_html_e( 'Your support message was sent successfully.', 'media-reference-inspector' ); ?></p></div>
+			<?php elseif ( 'invalid' === $support_state ) : ?>
+				<div class="notice notice-error inline mediarefinspector-inline-notice"><p><?php esc_html_e( 'Please enter a valid email address, subject, and message.', 'media-reference-inspector' ); ?></p></div>
+			<?php elseif ( 'rate_limited' === $support_state ) : ?>
+				<div class="notice notice-warning inline mediarefinspector-inline-notice"><p><?php esc_html_e( 'Please wait a minute before sending another support message.', 'media-reference-inspector' ); ?></p></div>
+			<?php elseif ( 'failed' === $support_state ) : ?>
+				<div class="notice notice-error inline mediarefinspector-inline-notice"><p><?php esc_html_e( 'WordPress could not send the email. Your hosting mail configuration may need attention.', 'media-reference-inspector' ); ?></p></div>
+			<?php endif; ?>
+
 			<div class="mediarefinspector-help-grid">
 				<div class="mediarefinspector-panel">
 					<h3><?php esc_html_e( 'Standard WordPress checks', 'media-reference-inspector' ); ?></h3>
@@ -384,108 +541,73 @@ class MediaRefInspector_Plugin {
 					<h3><?php esc_html_e( 'Important limitation', 'media-reference-inspector' ); ?></h3>
 					<p><?php esc_html_e( 'No scanner can prove that media is unused across every custom table, external service, theme, builder, shortcode, cache, or custom code path. Treat results as evidence for review, not as automatic deletion instructions.', 'media-reference-inspector' ); ?></p>
 				</div>
+				<div class="mediarefinspector-panel mediarefinspector-support-panel">
+					<div class="mediarefinspector-support-heading">
+						<div><h3><?php esc_html_e( 'Contact plugin support', 'media-reference-inspector' ); ?></h3><p><?php esc_html_e( 'Report a bug or request a feature directly from WordPress admin.', 'media-reference-inspector' ); ?></p></div>
+						<span class="dashicons dashicons-email-alt" aria-hidden="true"></span>
+					</div>
+					<form class="mediarefinspector-support-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+						<input type="hidden" name="action" value="mediarefinspector_send_support_email" />
+						<?php wp_nonce_field( 'mediarefinspector_send_support_email' ); ?>
+						<div class="mediarefinspector-support-field"><label for="mediarefinspector-support-type"><?php esc_html_e( 'Request type', 'media-reference-inspector' ); ?></label><select id="mediarefinspector-support-type" name="support_type"><option value="bug"><?php esc_html_e( 'Bug report', 'media-reference-inspector' ); ?></option><option value="feature"><?php esc_html_e( 'Feature request', 'media-reference-inspector' ); ?></option><option value="question"><?php esc_html_e( 'General question', 'media-reference-inspector' ); ?></option></select></div>
+						<div class="mediarefinspector-support-field"><label for="mediarefinspector-support-email"><?php esc_html_e( 'Your email', 'media-reference-inspector' ); ?></label><input id="mediarefinspector-support-email" name="support_email" type="email" required value="<?php echo esc_attr( $current_user->user_email ); ?>" autocomplete="email" /></div>
+						<div class="mediarefinspector-support-field mediarefinspector-support-field-wide"><label for="mediarefinspector-support-subject"><?php esc_html_e( 'Subject', 'media-reference-inspector' ); ?></label><input id="mediarefinspector-support-subject" name="support_subject" type="text" maxlength="120" required placeholder="<?php echo esc_attr__( 'Briefly describe the issue or feature', 'media-reference-inspector' ); ?>" /></div>
+						<div class="mediarefinspector-support-field mediarefinspector-support-field-wide"><label for="mediarefinspector-support-message"><?php esc_html_e( 'Message', 'media-reference-inspector' ); ?></label><textarea id="mediarefinspector-support-message" name="support_message" rows="7" maxlength="4000" required placeholder="<?php echo esc_attr__( 'Tell us what happened, what you expected, or what feature you would like.', 'media-reference-inspector' ); ?>"></textarea></div>
+						<div class="mediarefinspector-support-actions mediarefinspector-support-field-wide"><button type="submit" class="button button-primary"><?php esc_html_e( 'Send support email', 'media-reference-inspector' ); ?></button><p class="description"><?php esc_html_e( 'Nothing is sent until you press this button. Delivery uses this WordPress site’s configured mail system.', 'media-reference-inspector' ); ?></p></div>
+					</form>
+				</div>
 			</div>
 		</section>
 		<?php
 	}
 
-
 	/**
-	 * Handles a manual refresh of WordPress core plugin update metadata.
-	 *
-	 * This changes only WordPress' update cache/transient; it does not modify
-	 * media, content, plugin settings, or external data.
+	 * Sends an explicitly submitted support email.
 	 *
 	 * @return void
 	 */
-	public function handle_refresh_updates() {
-		if ( ! current_user_can( 'update_plugins' ) ) {
-			wp_die( esc_html__( 'You do not have permission to refresh update information.', 'media-reference-inspector' ) );
+	public function handle_support_email() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to send plugin support messages.', 'media-reference-inspector' ) );
 		}
+		check_admin_referer( 'mediarefinspector_send_support_email' );
+		$type    = isset( $_POST['support_type'] ) ? sanitize_key( wp_unslash( $_POST['support_type'] ) ) : 'question';
+		$email   = isset( $_POST['support_email'] ) ? sanitize_email( wp_unslash( $_POST['support_email'] ) ) : '';
+		$subject = isset( $_POST['support_subject'] ) ? sanitize_text_field( wp_unslash( $_POST['support_subject'] ) ) : '';
+		$message = isset( $_POST['support_message'] ) ? sanitize_textarea_field( wp_unslash( $_POST['support_message'] ) ) : '';
+		if ( ! in_array( $type, array( 'bug', 'feature', 'question' ), true ) ) { $type = 'question'; }
+		if ( ! is_email( $email ) || '' === $subject || '' === $message ) { $this->redirect_support_result( 'invalid' ); }
+		$user_id  = get_current_user_id();
+		$rate_key = 'mediarefinspector_support_' . $user_id;
+		if ( get_transient( $rate_key ) ) { $this->redirect_support_result( 'rate_limited' ); }
+		$labels = array( 'bug' => __( 'Bug report', 'media-reference-inspector' ), 'feature' => __( 'Feature request', 'media-reference-inspector' ), 'question' => __( 'General question', 'media-reference-inspector' ) );
+		$support_email = sanitize_email( apply_filters( 'mediarefinspector_support_email', 'rejoyanislam9009@gmail.com' ) );
+		if ( ! is_email( $support_email ) ) { $this->redirect_support_result( 'failed' ); }
+		$mail_subject = sprintf( '[Media Reference Inspector] %s: %s', $labels[ $type ], $subject );
+		$mail_body = sprintf( "Request type: %s
+Reply email: %s
+Plugin version: %s
+WordPress version: %s
 
-		check_admin_referer( 'mediarefinspector_refresh_updates' );
+Message:
+%s", $labels[ $type ], $email, MEDIAREFINSPECTOR_VERSION, get_bloginfo( 'version' ), $message );
+		$sent = wp_mail( $support_email, $mail_subject, $mail_body, array( 'Reply-To: ' . $email ) );
+		if ( $sent ) { set_transient( $rate_key, 1, MINUTE_IN_SECONDS ); $this->redirect_support_result( 'sent' ); }
+		$this->redirect_support_result( 'failed' );
+	}
 
-		if ( ! function_exists( 'wp_clean_plugins_cache' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		}
-		wp_clean_plugins_cache( true );
-		wp_update_plugins();
-
-		$url = add_query_arg(
-			array(
-				'page'      => 'media-reference-inspector',
-				'tab'       => 'diagnostics',
-				'refreshed' => '1',
-			),
-			admin_url( 'upload.php' )
-		);
+	/**
+	 * Redirects back to Help with a support form status.
+	 *
+	 * @param string $status Support status key.
+	 * @return void
+	 */
+	private function redirect_support_result( $status ) {
+		$url = add_query_arg( array( 'page' => 'media-reference-inspector', 'tab' => 'help', 'support_status' => sanitize_key( $status ) ), admin_url( 'upload.php' ) );
 		wp_safe_redirect( $url );
 		exit;
 	}
 
-	/**
-	 * Renders environment and WordPress.org update diagnostics.
-	 *
-	 * @return void
-	 */
-	private function render_diagnostics_tab() {
-		$plugin_file = plugin_basename( MEDIAREFINSPECTOR_FILE );
-		$updates     = get_site_transient( 'update_plugins' );
-		$response    = is_object( $updates ) && isset( $updates->response[ $plugin_file ] ) ? $updates->response[ $plugin_file ] : null;
-		$no_update   = is_object( $updates ) && isset( $updates->no_update[ $plugin_file ] ) ? $updates->no_update[ $plugin_file ] : null;
-		$checked     = is_object( $updates ) && isset( $updates->checked[ $plugin_file ] ) ? (string) $updates->checked[ $plugin_file ] : '';
-		$last_check  = is_object( $updates ) && ! empty( $updates->last_checked ) ? absint( $updates->last_checked ) : 0;
-		$last_age    = $last_check ? human_time_diff( $last_check, time() ) : __( 'Not available', 'media-reference-inspector' );
-		$status      = __( 'No update response cached', 'media-reference-inspector' );
-		$status_type = 'neutral';
-		$remote      = '';
-
-		if ( is_object( $response ) ) {
-			$remote      = isset( $response->new_version ) ? (string) $response->new_version : '';
-			$status      = $remote ? sprintf( __( 'Update available: %s', 'media-reference-inspector' ), $remote ) : __( 'Update available', 'media-reference-inspector' );
-			$status_type = 'success';
-		} elseif ( is_object( $no_update ) ) {
-			$remote      = isset( $no_update->new_version ) ? (string) $no_update->new_version : '';
-			$status      = __( 'WordPress currently reports no update for this installed version', 'media-reference-inspector' );
-			$status_type = 'neutral';
-		}
-		?>
-		<section class="mediarefinspector-section" aria-labelledby="mediarefinspector-diagnostics-heading">
-			<div class="mediarefinspector-section-heading mediarefinspector-section-heading-split">
-				<div>
-					<h2 id="mediarefinspector-diagnostics-heading"><?php esc_html_e( 'Diagnostics & update status', 'media-reference-inspector' ); ?></h2>
-					<p><?php esc_html_e( 'Inspect the exact plugin basename and WordPress core update cache used to decide whether an Update now row is displayed.', 'media-reference-inspector' ); ?></p>
-				</div>
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-					<input type="hidden" name="action" value="mediarefinspector_refresh_updates" />
-					<?php wp_nonce_field( 'mediarefinspector_refresh_updates' ); ?>
-					<button class="button button-secondary" type="submit"><?php esc_html_e( 'Refresh WordPress update status', 'media-reference-inspector' ); ?></button>
-				</form>
-			</div>
-
-			<?php if ( isset( $_GET['refreshed'] ) ) : ?>
-				<div class="notice notice-success inline"><p><?php esc_html_e( 'WordPress plugin update metadata was refreshed.', 'media-reference-inspector' ); ?></p></div>
-			<?php endif; ?>
-
-			<div class="mediarefinspector-diagnostics-grid">
-				<div class="mediarefinspector-panel"><span class="mediarefinspector-eyebrow"><?php esc_html_e( 'Installed plugin', 'media-reference-inspector' ); ?></span><h3><?php echo esc_html( MEDIAREFINSPECTOR_VERSION ); ?></h3><p><code><?php echo esc_html( $plugin_file ); ?></code></p></div>
-				<div class="mediarefinspector-panel"><span class="mediarefinspector-eyebrow"><?php esc_html_e( 'Update status', 'media-reference-inspector' ); ?></span><h3 class="mediarefinspector-diagnostic-status is-<?php echo esc_attr( $status_type ); ?>"><?php echo esc_html( $status ); ?></h3><p><?php echo esc_html( sprintf( __( 'Last core update check: %s ago', 'media-reference-inspector' ), $last_age ) ); ?></p></div>
-				<div class="mediarefinspector-panel"><span class="mediarefinspector-eyebrow"><?php esc_html_e( 'WordPress environment', 'media-reference-inspector' ); ?></span><h3><?php echo esc_html( get_bloginfo( 'version' ) ); ?></h3><p><?php echo esc_html( sprintf( __( 'PHP %s', 'media-reference-inspector' ), PHP_VERSION ) ); ?></p></div>
-			</div>
-
-			<div class="mediarefinspector-panel mediarefinspector-diagnostics-details">
-				<h3><?php esc_html_e( 'Update matching details', 'media-reference-inspector' ); ?></h3>
-				<dl>
-					<dt><?php esc_html_e( 'Expected plugin basename', 'media-reference-inspector' ); ?></dt><dd><code>media-reference-inspector/media-reference-inspector.php</code></dd>
-					<dt><?php esc_html_e( 'Actual plugin basename', 'media-reference-inspector' ); ?></dt><dd><code><?php echo esc_html( $plugin_file ); ?></code></dd>
-					<dt><?php esc_html_e( 'Version recorded by core', 'media-reference-inspector' ); ?></dt><dd><?php echo esc_html( $checked ? $checked : __( 'Not available', 'media-reference-inspector' ) ); ?></dd>
-					<dt><?php esc_html_e( 'Version in current update response', 'media-reference-inspector' ); ?></dt><dd><?php echo esc_html( $remote ? $remote : __( 'Not available', 'media-reference-inspector' ) ); ?></dd>
-				</dl>
-				<p class="description"><?php esc_html_e( 'WordPress displays an update row only when the update_plugins transient contains a response keyed by this exact plugin basename. WordPress.org may delay distribution of a newly published release before that response appears.', 'media-reference-inspector' ); ?></p>
-			</div>
-		</section>
-		<?php
-	}
 
 	/**
 	 * Renders single-scan results when a nonce-protected attachment is requested.
@@ -534,6 +656,7 @@ class MediaRefInspector_Plugin {
 			<?php $this->render_grouped_usages( $usages ); ?>
 		<?php endif; ?>
 
+		<?php $this->render_file_health( $attachment_id ); ?>
 		<?php $this->render_attachment_parent_note( $attachment_id ); ?>
 		<?php
 	}
@@ -950,7 +1073,7 @@ class MediaRefInspector_Plugin {
 	private function get_current_tab() {
 		$tab = filter_input( INPUT_GET, 'tab', FILTER_UNSAFE_RAW );
 		$tab = is_string( $tab ) ? sanitize_key( $tab ) : 'scanner';
-		return in_array( $tab, array( 'scanner', 'bulk', 'diagnostics', 'help' ), true ) ? $tab : 'scanner';
+		return in_array( $tab, array( 'scanner', 'bulk', 'audit', 'duplicates', 'help' ), true ) ? $tab : 'scanner';
 	}
 
 	/**

@@ -17,6 +17,7 @@
 	var summary = document.getElementById('mediarefinspector-bulk-summary');
 	var filterRow = document.getElementById('mediarefinspector-bulk-filter-row');
 	var resultFilter = document.getElementById('mediarefinspector-result-filter');
+	var resultSort = document.getElementById('mediarefinspector-result-sort');
 	var emptyState = document.getElementById('mediarefinspector-bulk-empty');
 	var tableWrap = document.getElementById('mediarefinspector-bulk-table-wrap');
 	var resultsBody = document.getElementById('mediarefinspector-bulk-results');
@@ -130,6 +131,8 @@
 	function renderResult(item) {
 		var row = document.createElement('tr');
 		row.dataset.status = item.status;
+		row.dataset.references = String(item.referenceCount || 0);
+		row.dataset.title = String(item.title || '').toLowerCase();
 
 		var mediaCell = document.createElement('td');
 		var title = document.createElement('strong');
@@ -230,9 +233,18 @@
 
 	function applyResultFilter() {
 		var filter = resultFilter.value || 'all';
-		Array.prototype.forEach.call(resultsBody.querySelectorAll('tr'), function (row) {
-			row.hidden = filter !== 'all' && row.dataset.status !== filter;
-		});
+		var rows = Array.prototype.slice.call(resultsBody.querySelectorAll('tr'));
+		var sort = resultSort ? (resultSort.value || 'scan') : 'scan';
+		if (sort !== 'scan') {
+			rows.sort(function (a, b) {
+				if (sort === 'title') { return (a.dataset.title || '').localeCompare(b.dataset.title || ''); }
+				var av = parseInt(a.dataset.references || '0', 10);
+				var bv = parseInt(b.dataset.references || '0', 10);
+				return sort === 'references-asc' ? av - bv : bv - av;
+			});
+			rows.forEach(function (row) { resultsBody.appendChild(row); });
+		}
+		rows.forEach(function (row) { row.hidden = filter !== 'all' && row.dataset.status !== filter; });
 	}
 
 	function csvEscape(value) {
@@ -319,5 +331,6 @@
 	});
 
 	resultFilter.addEventListener('change', applyResultFilter);
+	if (resultSort) { resultSort.addEventListener('change', applyResultFilter); }
 	exportButton.addEventListener('click', exportCsv);
 }());

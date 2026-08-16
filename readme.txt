@@ -3,7 +3,7 @@ Contributors: rejoyan9009
 Tags: media library, media usage, attachments, references, admin tools
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 2.1.0
+Stable tag: 2.2.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -29,25 +29,34 @@ Inspect one media item at a time with a professional WordPress-native workflow. 
 * Core media widgets and block widgets.
 * WooCommerce product gallery and product-category thumbnail attachment IDs.
 * Elementor saved media-control references when the saved JSON confirms the attachment ID.
+* Advanced Custom Fields (ACF) Image, File, and Gallery fields when ACF confirms the field type and saved attachment ID.
 
 = Bulk Scan =
 
-Bulk Scan processes media items one at a time through bounded AJAX requests. It supports media type, upload-age, search, and maximum-item filters, live progress, result filtering, and CSV export.
+Bulk Scan processes media items one at a time through bounded AJAX requests. It supports media type, upload-age, search, maximum-item filters, live progress, potential-unused review filtering, result sorting, and CSV export.
 
-= Diagnostics =
+= Page & Post Audit =
 
-The Diagnostics tab shows the exact plugin basename and WordPress core `update_plugins` cache entry that control Dashboard update notices. Administrators can refresh WordPress plugin update metadata without changing media or content.
+Audit a post or page to list supported media attachment IDs, flag broken attachment IDs, and review local file health without modifying content.
+
+= Duplicate Finder =
+
+Run an on-demand, bounded exact-file hash scan of recent local Media Library files. The tool reports exact matches only and never deletes files.
+
+= Support =
+
+The Help tab includes an explicit support form for bug reports, feature requests, and questions. Nothing is sent until an administrator submits the form. The message and reply email are sent through the site's configured WordPress mail system to plugin support.
 
 = Privacy =
 
-Media Reference Inspector does not send media or site data to external analytics or telemetry services and stores no scan history.
+Media Reference Inspector does not send media or site data to analytics or telemetry services and stores no scan history. The Help support form sends a message only after an administrator explicitly submits it.
 
 == Installation ==
 
 1. Install Media Reference Inspector from the WordPress Plugin Directory, or upload an approved test ZIP.
 2. Activate the plugin.
 3. Go to Media > Media References.
-4. Use Scanner for one media item, Bulk Scan for an audit batch, or Diagnostics for update/status information.
+4. Use Scanner for one media item, Bulk Scan for a batch audit, Page Audit for post/page media review, Duplicates for exact-file checks, or Help for documentation and support.
 
 == Screenshots ==
 
@@ -58,7 +67,7 @@ Media Reference Inspector does not send media or site data to external analytics
 
 = Does this plugin delete media files? =
 
-No. It is intentionally read-only for media and content. The Diagnostics refresh action only refreshes WordPress core plugin-update cache data.
+No. It is intentionally read-only for media and content.
 
 = Does “No supported references found” mean the file is safe to delete? =
 
@@ -72,15 +81,28 @@ Image, Gallery, Cover, Media & Text, File, Audio, and Video blocks are detected 
 
 Yes. It checks generated image-size URLs recorded in WordPress attachment metadata as well as the primary attachment URL.
 
-= What does the Diagnostics tab check? =
+= How does the support form work? =
 
-It shows the installed plugin version, actual plugin basename, WordPress/PHP versions, the version WordPress core last checked, and whether the `update_plugins` transient currently contains an update response for this exact plugin file.
+An administrator can explicitly submit a bug report, feature request, or question from the Help tab. The form sends only the entered reply email and message plus the plugin and WordPress version through the site's configured WordPress mail system.
 
 = Who can use the scanner? =
 
-The scanner requires the `manage_options` capability because results may reveal references to non-public content. Refreshing update metadata also requires the `update_plugins` capability.
+The scanner and support form require the `manage_options` capability because scan results may reveal references to non-public content.
 
 == Changelog ==
+
+= 2.2.0 =
+* Added per-user NEW badges and a What's New card that disappear after the new feature tabs are visited.
+* Added Page & Post Media Audit with supported media listing, broken attachment-ID review, and file-health status.
+* Added Media File Health to single-item scan results.
+* Added a bounded exact Duplicate Finder for recent readable local files.
+* Added confirmed ACF Image, File, and Gallery field reference detection when ACF is active.
+* Added Bulk Scan result sorting and clearer Potential unused review wording.
+* Removed the temporary Diagnostics tab now that normal WordPress.org updates are verified.
+* Rebuilt Bulk Scan controls for responsive desktop, tablet, and mobile layouts, including desktop-sized mobile viewports.
+* Added an explicit Help-tab support email form for bug reports, feature requests, and general questions.
+* Added nonce, capability, sanitization, rate-limit, and mail-delivery feedback protections to the support form.
+* Preserved all 2.1.0 scanner, integration, CSV, and read-only behavior.
 
 = 2.1.0 =
 * Added Diagnostics with exact plugin-basename and WordPress core update-cache visibility plus a nonce-protected update-status refresh action.
