@@ -19,6 +19,9 @@ jobs:
           ref: agent/2.2.0-beta-media-audit
           fetch-depth: 0
 
+      - name: Fix beta.2 builder anchors
+        run: python3 .github/scripts/fix-beta2-final-builder.py
+
       - name: Apply beta.2 feature changes
         run: python3 .github/scripts/build-2.2.0-beta2-final.py
 
