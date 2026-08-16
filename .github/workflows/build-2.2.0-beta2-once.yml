@@ -19,11 +19,8 @@ jobs:
           ref: agent/2.2.0-beta-media-audit
           fetch-depth: 0
 
-      - name: Normalize patch anchors
-        run: python3 .github/scripts/normalize-beta2-anchors.py
-
-      - name: Apply beta.2 UI changes
-        run: python3 .github/scripts/build-2.2.0-beta2.py
+      - name: Apply beta.2 feature changes
+        run: python3 .github/scripts/build-2.2.0-beta2-final.py
 
       - name: Validate beta package
         shell: bash
@@ -33,6 +30,7 @@ jobs:
           grep -Eq '^Stable tag:[[:space:]]+2\.1\.0[[:space:]]*$' readme.txt
           grep -q "'audit'" includes/class-mediarefinspector-plugin.php
           grep -q "'duplicates'" includes/class-mediarefinspector-plugin.php
+          grep -q 'mediarefinspector-new-badge' includes/class-mediarefinspector-plugin.php
           grep -q 'MediaRefInspector_Advanced_Scanner' media-reference-inspector.php
           grep -q 'MediaRefInspector_Audit_Service' media-reference-inspector.php
           grep -q 'ACF field:' includes/class-mediarefinspector-advanced-scanner.php
