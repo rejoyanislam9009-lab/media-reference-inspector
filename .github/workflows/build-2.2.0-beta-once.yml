@@ -21,7 +21,18 @@ jobs:
           fetch-depth: 0
 
       - name: Apply beta changes
-        run: python3 .github/scripts/build-2.2.0-beta.py
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('.github/scripts/build-2.2.0-beta.py')
+          text = path.read_text()
+          text = text.replace("new_help = r'''", "new_help = '''")
+          text = text.replace("support_css = r'''", "support_css = '''")
+          path.write_text(text)
+          PY
+          python3 .github/scripts/build-2.2.0-beta.py
 
       - name: Validate beta package
         shell: bash
