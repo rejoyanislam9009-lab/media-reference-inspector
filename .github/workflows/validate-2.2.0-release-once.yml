@@ -1,0 +1,46 @@
+name: Validate Media Reference Inspector 2.2.0 release once
+
+on:
+  push:
+    branches:
+      - agent/2.2.0-beta-media-audit
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    if: github.event.head_commit.message == 'Validate 2.2.0 release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release branch
+        uses: actions/checkout@v6
+        with:
+          ref: agent/2.2.0-beta-media-audit
+
+      - name: Validate release source
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Eq '^[[:space:]]*\* Version:[[:space:]]+2\.2\.0[[:space:]]*$' media-reference-inspector.php
+          grep -Eq "^define\( 'MEDIAREFINSPECTOR_VERSION', '2\.2\.0' \);$" media-reference-inspector.php
+          grep -Eq '^Stable tag:[[:space:]]+2\.2\.0[[:space:]]*$' readme.txt
+          ! grep -q '2.2.0-beta' media-reference-inspector.php
+          ! grep -q "'diagnostics'" includes/class-mediarefinspector-plugin.php
+          find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
+          node --check assets/js/admin.js
+
+      - name: Validate clean package
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/mri-release
+          mkdir -p /tmp/mri-release/media-reference-inspector
+          git archive HEAD | tar -x -C /tmp/mri-release/media-reference-inspector
+          rm -rf /tmp/mri-release/media-reference-inspector/.github /tmp/mri-release/media-reference-inspector/.wordpress-org
+          rm -f /tmp/mri-release/media-reference-inspector/.gitattributes /tmp/mri-release/media-reference-inspector/README.md /tmp/mri-release/media-reference-inspector/.validate-2.2.0-trigger
+          test -f /tmp/mri-release/media-reference-inspector/media-reference-inspector.php
+          test -f /tmp/mri-release/media-reference-inspector/readme.txt
+          test -f /tmp/mri-release/media-reference-inspector/assets/js/admin.js
+          test -f /tmp/mri-release/media-reference-inspector/includes/class-mediarefinspector-audit-service.php
+          ! find /tmp/mri-release/media-reference-inspector -name '.github' -o -name '.wordpress-org' | grep -q .
