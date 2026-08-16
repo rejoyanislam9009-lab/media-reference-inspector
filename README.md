@@ -6,20 +6,22 @@ Media Reference Inspector is a lightweight, read-only WordPress admin tool that 
 
 ## Current release
 
-- Version: `2.0.0`
+- Version: `2.1.0`
 - WordPress.org slug: `media-reference-inspector`
 - Requires WordPress: `6.2+`
 - Requires PHP: `7.4+`
 - License: `GPL-2.0-or-later`
 
-## Highlights in 2.0.0
+## Highlights in 2.1.0
 
-- Professional WordPress-style admin header and Scanner / Bulk Scan / Help navigation.
-- Responsive media cards, filters, richer file details, and grouped scan results.
-- Bounded AJAX bulk scanning with progress, stop control, result filters, and CSV export.
-- Media Library row action for opening an attachment directly in the inspector.
-- WooCommerce product gallery reference detection.
+- Professional WordPress-style Scanner / Bulk Scan / Help / Diagnostics workflow.
+- Scanner coverage summary so administrators can see which reference locations and integrations are checked.
+- Core media widget and block-widget reference detection.
+- WooCommerce product gallery and product-category thumbnail reference detection.
 - Elementor saved media-control reference detection with JSON validation.
+- Bulk scan filters for media type and upload age, with bounded batches up to 250 media items.
+- Richer CSV audit exports including media ID, filename, URL, MIME type, file size, upload date, reference count, reference types, and status.
+- Improved keyboard focus, responsive layouts, reduced-motion behavior, empty states, and diagnostics presentation.
 - Existing core WordPress, generated image-size URL, block, featured image, menu, site icon/logo, and theme checks remain supported.
 
 ## Safety-first behavior
@@ -58,9 +60,3 @@ Development issues and feature requests may also be opened in this GitHub reposi
 The GitHub repository is the development source. WordPress.org is the canonical distribution channel for stable releases.
 
 WordPress.org-specific icons, banners, and screenshots live in `.wordpress-org/` and are excluded from the plugin ZIP. Release validation checks the plugin version, stable tag, PHP syntax, and JavaScript syntax before publishing to the WordPress.org SVN repository.
-
-The deployment workflow uses the WordPress.org SVN username `rejoyan9009` and one GitHub Actions repository secret named `WORDPRESS_SVN_PASSWORD`.
-
-## Release policy
-
-Stable releases use matching version numbers in the main plugin header, `readme.txt` Stable Tag, and the WordPress.org SVN tag. Existing published release tags are treated as immutable; changes are released under a new version number.
