@@ -389,7 +389,9 @@ class MediaRefInspector_Plugin {
 					$this->render_notice( __( 'The audit request could not be verified. Please choose the post again.', 'media-reference-inspector' ), 'error' );
 				}
 			}
-			$args = array( 'post_type' => get_post_types( array( 'public' => true ), 'names' ), 'post_status' => array( 'publish', 'draft', 'pending', 'private' ), 'posts_per_page' => 30, 'orderby' => 'modified', 'order' => 'DESC', 'post_type__not_in' => array( 'attachment' ) );
+			$post_types = get_post_types( array( 'public' => true ), 'names' );
+			unset( $post_types['attachment'] );
+			$args = array( 'post_type' => array_values( $post_types ), 'post_status' => array( 'publish', 'draft', 'pending', 'private' ), 'posts_per_page' => 30, 'orderby' => 'modified', 'order' => 'DESC' );
 			if ( $search ) { $args['s'] = $search; }
 			$query = new WP_Query( $args );
 			?>
