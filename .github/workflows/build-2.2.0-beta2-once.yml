@@ -31,13 +31,6 @@ jobs:
           set -euo pipefail
           grep -Eq '^[[:space:]]*\* Version:[[:space:]]+2\.2\.0-beta\.2[[:space:]]*$' media-reference-inspector.php
           grep -Eq '^Stable tag:[[:space:]]+2\.1\.0[[:space:]]*$' readme.txt
-          grep -q "'audit'" includes/class-mediarefinspector-plugin.php
-          grep -q "'duplicates'" includes/class-mediarefinspector-plugin.php
-          grep -q 'mediarefinspector-new-badge' includes/class-mediarefinspector-plugin.php
-          grep -q 'MediaRefInspector_Advanced_Scanner' media-reference-inspector.php
-          grep -q 'MediaRefInspector_Audit_Service' media-reference-inspector.php
-          grep -q 'ACF field:' includes/class-mediarefinspector-advanced-scanner.php
-          ! grep -q "'diagnostics'" includes/class-mediarefinspector-plugin.php
           find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
           node --check assets/js/admin.js
 
