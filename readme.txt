@@ -29,10 +29,19 @@ Inspect one media item at a time with a professional WordPress-native workflow. 
 * Core media widgets and block widgets.
 * WooCommerce product gallery and product-category thumbnail attachment IDs.
 * Elementor saved media-control references when the saved JSON confirms the attachment ID.
+* Advanced Custom Fields (ACF) Image, File, and Gallery fields when ACF confirms the field type and saved attachment ID.
 
 = Bulk Scan =
 
-Bulk Scan processes media items one at a time through bounded AJAX requests. It supports media type, upload-age, search, and maximum-item filters, live progress, result filtering, and CSV export.
+Bulk Scan processes media items one at a time through bounded AJAX requests. It supports media type, upload-age, search, maximum-item filters, live progress, potential-unused review filtering, result sorting, and CSV export.
+
+= Page & Post Audit =
+
+Audit a post or page to list supported media attachment IDs, flag broken attachment IDs, and review local file health without modifying content.
+
+= Duplicate Finder =
+
+Run an on-demand, bounded exact-file hash scan of recent local Media Library files. The tool reports exact matches only and never deletes files.
 
 = Support =
 
@@ -81,6 +90,14 @@ An administrator can explicitly submit a bug report, feature request, or questio
 The scanner and support form require the `manage_options` capability because scan results may reveal references to non-public content.
 
 == Changelog ==
+
+= 2.2.0-beta.2 =
+* Added per-user NEW badges and a What's New card that disappear after the new feature tabs are visited.
+* Added Page & Post Media Audit with supported media listing, broken attachment-ID review, and file-health status.
+* Added Media File Health to single-item scan results.
+* Added a bounded exact Duplicate Finder for recent readable local files.
+* Added confirmed ACF Image, File, and Gallery field reference detection when ACF is active.
+* Added Bulk Scan result sorting and clearer Potential unused review wording.
 
 = 2.2.0-beta.1 =
 * Removed the temporary Diagnostics tab now that normal WordPress.org updates are verified.
