@@ -8,8 +8,6 @@ on:
         required: true
         default: "2.2.0"
   push:
-    branches:
-      - main
     tags:
       - "v*"
       - "[0-9]*"
@@ -19,7 +17,6 @@ permissions:
 
 jobs:
   deploy:
-    if: github.event_name == 'workflow_dispatch' || github.ref_type == 'tag' || github.event.head_commit.message == 'Deploy WordPress.org 2.2.0'
     name: Deploy plugin release
     runs-on: ubuntu-latest
     env:
@@ -35,11 +32,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ "$GITHUB_REF_TYPE" = "branch" ]; then
-            VERSION="2.2.0"
-          else
-            VERSION="${VERSION#v}"
-          fi
+          VERSION="${VERSION#v}"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           grep -Eq "^[[:space:]]*\* Version:[[:space:]]+$VERSION[[:space:]]*$" media-reference-inspector.php
           grep -Eq "^Stable tag:[[:space:]]+$VERSION[[:space:]]*$" readme.txt
