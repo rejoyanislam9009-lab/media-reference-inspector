@@ -3,7 +3,7 @@ Contributors: rejoyan9009
 Tags: media library, media usage, attachments, references, admin tools
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 2.1.0
+Stable tag: 2.2.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -56,7 +56,7 @@ Media Reference Inspector does not send media or site data to analytics or telem
 1. Install Media Reference Inspector from the WordPress Plugin Directory, or upload an approved test ZIP.
 2. Activate the plugin.
 3. Go to Media > Media References.
-4. Use Scanner for one media item, Bulk Scan for an audit batch, or Help for documentation and support.
+4. Use Scanner for one media item, Bulk Scan for a batch audit, Page Audit for post/page media review, Duplicates for exact-file checks, or Help for documentation and support.
 
 == Screenshots ==
 
@@ -91,15 +91,13 @@ The scanner and support form require the `manage_options` capability because sca
 
 == Changelog ==
 
-= 2.2.0-beta.2 =
+= 2.2.0 =
 * Added per-user NEW badges and a What's New card that disappear after the new feature tabs are visited.
 * Added Page & Post Media Audit with supported media listing, broken attachment-ID review, and file-health status.
 * Added Media File Health to single-item scan results.
 * Added a bounded exact Duplicate Finder for recent readable local files.
 * Added confirmed ACF Image, File, and Gallery field reference detection when ACF is active.
 * Added Bulk Scan result sorting and clearer Potential unused review wording.
-
-= 2.2.0-beta.1 =
 * Removed the temporary Diagnostics tab now that normal WordPress.org updates are verified.
 * Rebuilt Bulk Scan controls for responsive desktop, tablet, and mobile layouts, including desktop-sized mobile viewports.
 * Added an explicit Help-tab support email form for bug reports, feature requests, and general questions.
