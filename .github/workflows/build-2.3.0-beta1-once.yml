@@ -4,13 +4,16 @@ on:
   push:
     branches:
       - agent/2.3.0-audit-workflow
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
   build:
-    if: github.event.head_commit.message == 'Trigger 2.3.0 beta.1 build'
+    if: github.event_name == 'pull_request' || github.event.head_commit.message == 'Trigger 2.3.0 beta.1 build'
     runs-on: ubuntu-latest
     steps:
       - name: Check out branch
@@ -53,6 +56,7 @@ jobs:
           rm -rf /tmp/mri-package
           mkdir -p /tmp/mri-package/media-reference-inspector
           git archive HEAD | tar -x -C /tmp/mri-package/media-reference-inspector
+          rm -f /tmp/mri-package/media-reference-inspector/.build-trigger-2.3.0-beta1
           cd /tmp/mri-package
           zip -qr "$GITHUB_WORKSPACE/media-reference-inspector-2.3.0-beta.1.zip" media-reference-inspector
           cd "$GITHUB_WORKSPACE"
