@@ -89,6 +89,10 @@ An administrator can explicitly submit a bug report, feature request, or questio
 
 The scanner and support form require the `manage_options` capability because scan results may reveal references to non-public content.
 
+= 2.3.0 beta testing =
+
+This test build adds reference confidence/source context, integration coverage, a bounded broken local uploads URL scanner, cached Media Library scan status, selected-ID bulk scans, evidence/file-health filters, and a printable HTML report. It remains read-only.
+
 == Changelog ==
 
 = 2.2.0 =

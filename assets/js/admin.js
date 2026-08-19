@@ -10,6 +10,7 @@
 
 	var stopButton = document.getElementById('mediarefinspector-stop-bulk');
 	var exportButton = document.getElementById('mediarefinspector-export-csv');
+	var exportHtmlButton = document.getElementById('mediarefinspector-export-html');
 	var progressWrap = document.getElementById('mediarefinspector-bulk-progress');
 	var progressStatus = document.getElementById('mediarefinspector-progress-status');
 	var progressCount = document.getElementById('mediarefinspector-progress-count');
@@ -18,6 +19,8 @@
 	var filterRow = document.getElementById('mediarefinspector-bulk-filter-row');
 	var resultFilter = document.getElementById('mediarefinspector-result-filter');
 	var resultSort = document.getElementById('mediarefinspector-result-sort');
+	var sourceFilter = document.getElementById('mediarefinspector-source-filter');
+	var healthFilter = document.getElementById('mediarefinspector-health-filter');
 	var emptyState = document.getElementById('mediarefinspector-bulk-empty');
 	var tableWrap = document.getElementById('mediarefinspector-bulk-table-wrap');
 	var resultsBody = document.getElementById('mediarefinspector-bulk-results');
@@ -25,6 +28,7 @@
 	var typeInput = document.getElementById('mediarefinspector-bulk-type');
 	var limitInput = document.getElementById('mediarefinspector-bulk-limit');
 	var ageInput = document.getElementById('mediarefinspector-bulk-age');
+	var selectedIdsInput = document.getElementById('mediarefinspector-selected-ids');
 	var strings = config.strings || {};
 	var stopped = false;
 	var results = [];
@@ -54,9 +58,8 @@
 		searchInput.disabled = isRunning;
 		typeInput.disabled = isRunning;
 		limitInput.disabled = isRunning;
-		if (ageInput) {
-			ageInput.disabled = isRunning;
-		}
+		if (ageInput) { ageInput.disabled = isRunning; }
+		if (selectedIdsInput) { selectedIdsInput.disabled = isRunning; }
 	}
 
 	function resetView() {
@@ -73,6 +76,7 @@
 		tableWrap.hidden = true;
 		emptyState.hidden = true;
 		exportButton.disabled = true;
+		if (exportHtmlButton) { exportHtmlButton.disabled = true; }
 		updateSummary();
 	}
 
@@ -133,6 +137,8 @@
 		row.dataset.status = item.status;
 		row.dataset.references = String(item.referenceCount || 0);
 		row.dataset.title = String(item.title || '').toLowerCase();
+		row.dataset.sources = Array.isArray(item.sourceCategories) ? item.sourceCategories.join(' ') : '';
+		row.dataset.health = item.healthStatus || 'review';
 
 		var mediaCell = document.createElement('td');
 		var title = document.createElement('strong');
@@ -228,11 +234,14 @@
 		tableWrap.hidden = results.length === 0;
 		emptyState.hidden = results.length > 0;
 		exportButton.disabled = results.length === 0;
+		if (exportHtmlButton) { exportHtmlButton.disabled = results.length === 0; }
 		applyResultFilter();
 	}
 
 	function applyResultFilter() {
 		var filter = resultFilter.value || 'all';
+		var source = sourceFilter ? (sourceFilter.value || 'all') : 'all';
+		var health = healthFilter ? (healthFilter.value || 'all') : 'all';
 		var rows = Array.prototype.slice.call(resultsBody.querySelectorAll('tr'));
 		var sort = resultSort ? (resultSort.value || 'scan') : 'scan';
 		if (sort !== 'scan') {
@@ -244,12 +253,31 @@
 			});
 			rows.forEach(function (row) { resultsBody.appendChild(row); });
 		}
-		rows.forEach(function (row) { row.hidden = filter !== 'all' && row.dataset.status !== filter; });
+		rows.forEach(function (row) {
+			var statusMatch = filter === 'all' || row.dataset.status === filter;
+			var sourceMatch = source === 'all' || String(row.dataset.sources || '').split(' ').indexOf(source) !== -1;
+			var healthMatch = health === 'all' || row.dataset.health === health;
+			row.hidden = !(statusMatch && sourceMatch && healthMatch);
+		});
 	}
 
 	function csvEscape(value) {
 		var text = String(value == null ? '' : value);
 		return '"' + text.replace(/"/g, '""') + '"';
+	}
+
+	function htmlEscape(value) {
+		return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[char]; });
+	}
+
+	function exportHtml() {
+		if (!results.length) { return; }
+		var body = results.map(function (item) {
+			return '<tr><td>' + htmlEscape(item.id) + '</td><td>' + htmlEscape(item.title || '') + '</td><td>' + htmlEscape(makeStatusLabel(item.status)) + '</td><td>' + htmlEscape(item.referenceCount || 0) + '</td><td>' + htmlEscape((item.referenceTypes || []).join(', ')) + '</td><td>' + htmlEscape(item.healthStatus || 'review') + '</td></tr>';
+		}).join('');
+		var html = '<!doctype html><html><head><meta charset="utf-8"><title>Media Reference Inspector report</title><style>body{font-family:system-ui,sans-serif;margin:32px;color:#1d2327}table{border-collapse:collapse;width:100%}th,td{border:1px solid #dcdcde;padding:8px;text-align:left}th{background:#f6f7f7}small{color:#646970}</style></head><body><h1>Media Reference Inspector</h1><p>Read-only audit report. No supported references found does not prove a file is unused.</p><table><thead><tr><th>ID</th><th>Media</th><th>Status</th><th>References</th><th>Reference types</th><th>File health</th></tr></thead><tbody>' + body + '</tbody></table></body></html>';
+		var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+		var link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'media-reference-inspector-report.html'; document.body.appendChild(link); link.click(); URL.revokeObjectURL(link.href); link.remove();
 	}
 
 	function exportCsv() {
@@ -301,7 +329,8 @@
 			search: searchInput.value || '',
 			media_type: typeInput.value || '',
 			age: ageInput ? (ageInput.value || '0') : '0',
-			limit: limitInput.value || '100'
+			limit: limitInput.value || '100',
+			selected_ids: selectedIdsInput ? (selectedIdsInput.value || '') : ''
 		}).then(function (response) {
 			if (!response || !response.success || !response.data || !Array.isArray(response.data.ids)) {
 				throw new Error(strings.failed || 'Bulk scan failed.');
@@ -332,5 +361,8 @@
 
 	resultFilter.addEventListener('change', applyResultFilter);
 	if (resultSort) { resultSort.addEventListener('change', applyResultFilter); }
+	if (sourceFilter) { sourceFilter.addEventListener('change', applyResultFilter); }
+	if (healthFilter) { healthFilter.addEventListener('change', applyResultFilter); }
 	exportButton.addEventListener('click', exportCsv);
+	if (exportHtmlButton) { exportHtmlButton.addEventListener('click', exportHtml); }
 }());
