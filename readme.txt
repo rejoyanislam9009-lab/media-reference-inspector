@@ -3,7 +3,7 @@ Contributors: rejoyan9009
 Tags: media library, media usage, attachments, references, admin tools
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 2.2.0
+Stable tag: 2.3.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -30,10 +30,15 @@ Inspect one media item at a time with a professional WordPress-native workflow. 
 * WooCommerce product gallery and product-category thumbnail attachment IDs.
 * Elementor saved media-control references when the saved JSON confirms the attachment ID.
 * Advanced Custom Fields (ACF) Image, File, and Gallery fields when ACF confirms the field type and saved attachment ID.
+* Reference evidence details including confidence, source category, and context for supported results.
 
 = Bulk Scan =
 
-Bulk Scan processes media items one at a time through bounded AJAX requests. It supports media type, upload-age, search, maximum-item filters, live progress, potential-unused review filtering, result sorting, and CSV export.
+Bulk Scan processes media items one at a time through bounded AJAX requests. It supports media type, upload-age, search, maximum-item filters, selected attachment IDs, live progress, potential-unused review filtering, reference evidence and file-health filtering, result sorting, CSV export, and a printable HTML audit report.
+
+= Broken URLs =
+
+Run a bounded, read-only scan for local WordPress uploads URLs saved in post content or excerpts where the corresponding local file no longer exists. The scanner checks local uploads paths only and does not make external network requests.
 
 = Page & Post Audit =
 
@@ -43,20 +48,28 @@ Audit a post or page to list supported media attachment IDs, flag broken attachm
 
 Run an on-demand, bounded exact-file hash scan of recent local Media Library files. The tool reports exact matches only and never deletes files.
 
+= Integration Coverage =
+
+The admin interface reports supported coverage for WordPress Core, WooCommerce, Elementor, and ACF so administrators can see which integration-aware checks are active on the site.
+
+= Media Library Status =
+
+Reference checks can store a short-lived local scan-status cache for the inspected attachment so Media Library workflows can show recent on-demand reference status without running a heavy scan on every page load.
+
 = Support =
 
 The Help tab includes an explicit support form for bug reports, feature requests, and questions. Nothing is sent until an administrator submits the form. The message and reply email are sent through the site's configured WordPress mail system to plugin support.
 
 = Privacy =
 
-Media Reference Inspector does not send media or site data to analytics or telemetry services and stores no scan history. The Help support form sends a message only after an administrator explicitly submits it.
+Media Reference Inspector does not send media or site data to analytics or telemetry services and stores no scan history. Short-lived scan-status cache data stays in WordPress. The Help support form sends a message only after an administrator explicitly submits it.
 
 == Installation ==
 
 1. Install Media Reference Inspector from the WordPress Plugin Directory, or upload an approved test ZIP.
 2. Activate the plugin.
 3. Go to Media > Media References.
-4. Use Scanner for one media item, Bulk Scan for a batch audit, Page Audit for post/page media review, Duplicates for exact-file checks, or Help for documentation and support.
+4. Use Scanner for one media item, Bulk Scan for a batch audit, Broken URLs for missing local uploads files referenced in content, Page Audit for post/page media review, Duplicates for exact-file checks, or Help for documentation and support.
 
 == Screenshots ==
 
@@ -81,6 +94,10 @@ Image, Gallery, Cover, Media & Text, File, Audio, and Video blocks are detected 
 
 Yes. It checks generated image-size URLs recorded in WordPress attachment metadata as well as the primary attachment URL.
 
+= Does Broken URLs check external websites? =
+
+No. It checks URLs under the site's own WordPress uploads base URL and verifies the corresponding local uploads file path. It does not request remote URLs.
+
 = How does the support form work? =
 
 An administrator can explicitly submit a bug report, feature request, or question from the Help tab. The form sends only the entered reply email and message plus the plugin and WordPress version through the site's configured WordPress mail system.
@@ -90,6 +107,16 @@ An administrator can explicitly submit a bug report, feature request, or questio
 The scanner and support form require the `manage_options` capability because scan results may reveal references to non-public content.
 
 == Changelog ==
+
+= 2.3.0 =
+* Added reference confidence, source-category, and context metadata for supported scan results.
+* Added integration coverage status for WordPress Core, WooCommerce, Elementor, and ACF.
+* Added a bounded Broken URLs scanner for missing local uploads files referenced in post content or excerpts.
+* Added short-lived local scan-status caching for on-demand Media Library reference status.
+* Added selected attachment-ID support to Bulk Scan.
+* Added Bulk Scan evidence/source and file-health filtering.
+* Added a printable HTML audit report alongside the existing CSV export.
+* Preserved existing Scanner, Page Audit, Duplicate Finder, support form, responsive UI, and read-only safety behavior.
 
 = 2.2.0 =
 * Added per-user NEW badges and a What's New card that disappear after the new feature tabs are visited.
