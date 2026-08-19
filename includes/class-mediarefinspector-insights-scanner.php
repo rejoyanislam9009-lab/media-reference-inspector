@@ -95,7 +95,7 @@ class MediaRefInspector_Insights_Scanner extends MediaRefInspector_Advanced_Scan
 		$seen    = array();
 		foreach ( is_array( $rows ) ? $rows : array() as $row ) {
 			$text = html_entity_decode( (string) $row->post_content . "\n" . (string) $row->post_excerpt, ENT_QUOTES, 'UTF-8' );
-			if ( ! preg_match_all( '~https?://[^\\s\"\'<>]+~i', $text, $matches ) ) {
+			if ( ! preg_match_all( '~https?://[^\s<>"\x27]+~i', $text, $matches ) ) {
 				continue;
 			}
 			foreach ( $matches[0] as $raw_url ) {
