@@ -1,0 +1,101 @@
+name: Deploy Media Reference Inspector 2.3.0 once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".release/deploy-2.3.0"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Validate and deploy 2.3.0
+    runs-on: ubuntu-latest
+    env:
+      VERSION: "2.3.0"
+      SVN_USERNAME: rejoyan9009
+      SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
+      SLUG: media-reference-inspector
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Validate release source
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Eq '^[[:space:]]*\* Version:[[:space:]]+2\.3\.0[[:space:]]*$' media-reference-inspector.php
+          grep -Eq '^Stable tag:[[:space:]]+2\.3\.0[[:space:]]*$' readme.txt
+          ! grep -q '2.3.0-beta.1' media-reference-inspector.php
+          ! grep -q '^Stable tag:[[:space:]]+2\.2\.0[[:space:]]*$' readme.txt
+          find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
+          node --check assets/js/admin.js
+
+      - name: Install Subversion
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v svn >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y subversion
+          fi
+
+      - name: Deploy to WordPress.org SVN
+        shell: bash
+        run: |
+          set -euo pipefail
+          SVN_DIR="${HOME}/svn-${SLUG}"
+          EXPORT_DIR="${HOME}/export-${SLUG}"
+
+          svn checkout --depth immediates "https://plugins.svn.wordpress.org/${SLUG}/" "$SVN_DIR"
+          cd "$SVN_DIR"
+          svn update --set-depth infinity assets
+          svn update --set-depth infinity trunk
+          svn update --set-depth immediates tags
+
+          if [ -d "tags/$VERSION" ]; then
+            echo "Version $VERSION is already published; refusing to rewrite an existing tag."
+            exit 1
+          fi
+
+          rm -rf "$EXPORT_DIR"
+          mkdir -p "$EXPORT_DIR/assets" "$EXPORT_DIR/includes"
+          cp "$GITHUB_WORKSPACE/media-reference-inspector.php" "$EXPORT_DIR/"
+          cp "$GITHUB_WORKSPACE/readme.txt" "$EXPORT_DIR/"
+          cp -R "$GITHUB_WORKSPACE/assets/." "$EXPORT_DIR/assets/"
+          cp -R "$GITHUB_WORKSPACE/includes/." "$EXPORT_DIR/includes/"
+
+          cd "$SVN_DIR"
+          rsync -rc --delete "$EXPORT_DIR/" trunk/
+          rsync -rc --delete "$GITHUB_WORKSPACE/.wordpress-org/" assets/
+
+          svn add trunk assets --force >/dev/null
+          while IFS= read -r path; do
+            [ -n "$path" ] && svn rm "$path"
+          done < <(svn status trunk assets | awk '/^!/ { sub(/^! +/, ""); print }')
+
+          svn cp trunk "tags/$VERSION"
+
+          if compgen -G "assets/*.png" > /dev/null; then
+            svn propset svn:mime-type image/png assets/*.png >/dev/null
+          fi
+          if compgen -G "assets/*.jpg" > /dev/null; then
+            svn propset svn:mime-type image/jpeg assets/*.jpg >/dev/null
+          fi
+          if compgen -G "assets/*.svg" > /dev/null; then
+            svn propset svn:mime-type image/svg+xml assets/*.svg >/dev/null || true
+          fi
+
+          svn update
+          svn status
+          svn commit \
+            -m "Release Media Reference Inspector $VERSION by rejoyan9009" \
+            --no-auth-cache \
+            --non-interactive \
+            --username "$SVN_USERNAME" \
+            --password "$SVN_PASSWORD"
+
+          echo "Plugin version $VERSION deployed to WordPress.org."
