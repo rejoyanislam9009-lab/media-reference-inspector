@@ -1,2 +1,435 @@
-import base64, zlib
-exec(zlib.decompress(base64.b64decode('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')).decode('utf-8'))
+from pathlib import Path
+import re
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def read(path):
+    return (ROOT / path).read_text(encoding="utf-8")
+
+
+def write(path, text):
+    (ROOT / path).write_text(text, encoding="utf-8")
+
+
+def replace_once(path, old, new):
+    text = read(path)
+    if old not in text:
+        raise RuntimeError(f"Required anchor not found in {path}: {old[:100]!r}")
+    write(path, text.replace(old, new, 1))
+
+
+def replace_all(path, old, new):
+    text = read(path)
+    if old not in text:
+        raise RuntimeError(f"Required anchor not found in {path}: {old[:100]!r}")
+    write(path, text.replace(old, new))
+
+
+# ---------------------------------------------------------------------------
+# Plugin bootstrap: beta version + Insights scanner, while Stable tag remains
+# 2.2.0 so this test build cannot accidentally become a WordPress.org release.
+# ---------------------------------------------------------------------------
+replace_once(
+    "media-reference-inspector.php",
+    " * Version:           2.2.0",
+    " * Version:           2.3.0-beta.1",
+)
+replace_once(
+    "media-reference-inspector.php",
+    "define( 'MEDIAREFINSPECTOR_VERSION', '2.2.0' );",
+    "define( 'MEDIAREFINSPECTOR_VERSION', '2.3.0-beta.1' );",
+)
+replace_once(
+    "media-reference-inspector.php",
+    "require_once MEDIAREFINSPECTOR_PATH . 'includes/class-mediarefinspector-advanced-scanner.php';\n",
+    "require_once MEDIAREFINSPECTOR_PATH . 'includes/class-mediarefinspector-advanced-scanner.php';\n"
+    "require_once MEDIAREFINSPECTOR_PATH . 'includes/class-mediarefinspector-insights-scanner.php';\n",
+)
+replace_once(
+    "media-reference-inspector.php",
+    "$plugin = new MediaRefInspector_Plugin( new MediaRefInspector_Advanced_Scanner() );",
+    "$plugin = new MediaRefInspector_Plugin( new MediaRefInspector_Insights_Scanner() );",
+)
+
+
+# ---------------------------------------------------------------------------
+# Admin navigation and NEW state.
+# ---------------------------------------------------------------------------
+replace_once(
+    "includes/class-mediarefinspector-plugin.php",
+    "\t\t\t\t} elseif ( 'duplicates' === $tab ) {\n\t\t\t\t\t$this->render_duplicates_tab();\n\t\t\t\t} elseif ( 'help' === $tab ) {",
+    "\t\t\t\t} elseif ( 'duplicates' === $tab ) {\n\t\t\t\t\t$this->render_duplicates_tab();\n"
+    "\t\t\t\t} elseif ( 'broken' === $tab ) {\n\t\t\t\t\t$this->render_broken_tab();\n"
+    "\t\t\t\t} elseif ( 'help' === $tab ) {",
+)
+replace_once(
+    "includes/class-mediarefinspector-plugin.php",
+    "\t\t\t'duplicates' => __( 'Duplicates', 'media-reference-inspector' ),\n\t\t\t'help'       => __( 'Help', 'media-reference-inspector' ),",
+    "\t\t\t'duplicates' => __( 'Duplicates', 'media-reference-inspector' ),\n"
+    "\t\t\t'broken'     => __( 'Broken URLs', 'media-reference-inspector' ),\n"
+    "\t\t\t'help'       => __( 'Help', 'media-reference-inspector' ),",
+)
+replace_once(
+    "includes/class-mediarefinspector-plugin.php",
+    "return in_array( $tab, array( 'scanner', 'bulk', 'audit', 'duplicates', 'help' ), true ) ? $tab : 'scanner';",
+    "return in_array( $tab, array( 'scanner', 'bulk', 'audit', 'duplicates', 'broken', 'help' ), true ) ? $tab : 'scanner';",
+)
+
+old_new_methods = r'''\tprivate function is_new_feature( $feature ) {
+\t\tif ( ! in_array( $feature, array( 'audit', 'duplicates' ), true ) ) { return false; }
+\t\t$seen = get_user_meta( get_current_user_id(), 'mediarefinspector_seen_features_220', true );
+\t\t$seen = is_array( $seen ) ? $seen : array();
+\t\treturn empty( $seen[ $feature ] );
+\t}
+
+\t/**
+\t * Marks the current feature tab as seen after rendering.
+\t *
+\t * @param string $feature Feature key.
+\t * @return void
+\t */
+\tprivate function mark_feature_seen( $feature ) {
+\t\tif ( ! in_array( $feature, array( 'audit', 'duplicates' ), true ) ) { return; }
+\t\t$seen = get_user_meta( get_current_user_id(), 'mediarefinspector_seen_features_220', true );
+\t\t$seen = is_array( $seen ) ? $seen : array();
+\t\t$seen[ $feature ] = 1;
+\t\tupdate_user_meta( get_current_user_id(), 'mediarefinspector_seen_features_220', $seen );
+\t}
+'''.replace('\\t', '\t')
+new_new_methods = r'''\tprivate function is_new_feature( $feature ) {
+\t\tif ( ! in_array( $feature, array( 'bulk', 'broken' ), true ) ) {
+\t\t\treturn false;
+\t\t}
+\t\t$seen = get_user_meta( get_current_user_id(), 'mediarefinspector_seen_features_230', true );
+\t\t$seen = is_array( $seen ) ? $seen : array();
+\t\treturn empty( $seen[ $feature ] );
+\t}
+
+\t/**
+\t * Marks the current 2.3 feature tab as seen after rendering.
+\t *
+\t * @param string $feature Feature key.
+\t * @return void
+\t */
+\tprivate function mark_feature_seen( $feature ) {
+\t\tif ( ! in_array( $feature, array( 'bulk', 'broken' ), true ) ) {
+\t\t\treturn;
+\t\t}
+\t\t$seen = get_user_meta( get_current_user_id(), 'mediarefinspector_seen_features_230', true );
+\t\t$seen = is_array( $seen ) ? $seen : array();
+\t\t$seen[ $feature ] = 1;
+\t\tupdate_user_meta( get_current_user_id(), 'mediarefinspector_seen_features_230', $seen );
+\t}
+'''.replace('\\t', '\t')
+replace_once("includes/class-mediarefinspector-plugin.php", old_new_methods, new_new_methods)
+
+# Remove the old 2.2 hard-coded heading badges; 2.3 badges are driven per user.
+replace_all(
+    "includes/class-mediarefinspector-plugin.php",
+    " <span class=\"mediarefinspector-new-badge\"><?php esc_html_e( 'NEW', 'media-reference-inspector' ); ?></span>",
+    "",
+)
+
+
+# ---------------------------------------------------------------------------
+# Scanner evidence presentation and integration coverage.
+# ---------------------------------------------------------------------------
+replace_once(
+    "includes/class-mediarefinspector-plugin.php",
+    "\t\t\t</div>\n\n\t\t\t<?php $this->render_whats_new_panel(); ?>",
+    "\t\t\t</div>\n\n\t\t\t<?php $this->render_integration_coverage(); ?>\n"
+    "\t\t\t<?php $this->render_whats_new_panel(); ?>",
+)
+
+replace_once(
+    "includes/class-mediarefinspector-plugin.php",
+    "\t\t\t\t\t\t\t\t<div><strong><?php echo esc_html( $usage['label'] ); ?></strong><span class=\"mediarefinspector-status-pill\"><?php echo esc_html( $usage['status'] ); ?></span></div>\n"
+    "\t\t\t\t\t\t\t\t<div class=\"mediarefinspector-reference-actions\">",
+    "\t\t\t\t\t\t\t\t<div><strong><?php echo esc_html( $usage['label'] ); ?></strong><span class=\"mediarefinspector-status-pill\"><?php echo esc_html( $usage['status'] ); ?></span></div>\n"
+    "\t\t\t\t\t\t\t\t<?php if ( ! empty( $usage['source'] ) || ! empty( $usage['confidence'] ) ) : ?>\n"
+    "\t\t\t\t\t\t\t\t\t<p class=\"mediarefinspector-evidence\"><strong><?php echo esc_html( isset( $usage['confidence'] ) ? $usage['confidence'] : __( 'High', 'media-reference-inspector' ) ); ?></strong><?php if ( ! empty( $usage['source'] ) ) : ?> · <?php echo esc_html( $usage['source'] ); ?><?php endif; ?><?php if ( ! empty( $usage['context'] ) && $usage['context'] !== $usage['label'] ) : ?><span><?php echo esc_html( $usage['context'] ); ?></span><?php endif; ?></p>\n"
+    "\t\t\t\t\t\t\t\t<?php endif; ?>\n"
+    "\t\t\t\t\t\t\t\t<div class=\"mediarefinspector-reference-actions\">",
+)
+
+# Cached on-demand status is shown in the Media Library row actions after a scan.
+replace_once(
+    "includes/class-mediarefinspector-plugin.php",
+    "\t\t$actions['mediarefinspector'] = sprintf(\n\t\t\t'<a href=\"%1$s\">%2$s</a>',\n\t\t\tesc_url( $url ),\n\t\t\tesc_html__( 'Check references', 'media-reference-inspector' )\n\t\t);\n\n\t\treturn $actions;",
+    "\t\t$actions['mediarefinspector'] = sprintf(\n\t\t\t'<a href=\"%1$s\">%2$s</a>',\n\t\t\tesc_url( $url ),\n\t\t\tesc_html__( 'Check references', 'media-reference-inspector' )\n\t\t);\n"
+    "\t\t$cached = get_transient( 'mediarefinspector_scan_status_' . absint( $post->ID ) );\n"
+    "\t\tif ( is_array( $cached ) && ! empty( $cached['status'] ) ) {\n"
+    "\t\t\t$label = 'referenced' === $cached['status'] ? __( 'Cached: Referenced', 'media-reference-inspector' ) : __( 'Cached: Needs review', 'media-reference-inspector' );\n"
+    "\t\t\t$actions['mediarefinspector_status'] = '<span class=\"mediarefinspector-row-status\">' . esc_html( $label ) . '</span>';\n"
+    "\t\t}\n\n\t\treturn $actions;",
+)
+
+
+# ---------------------------------------------------------------------------
+# Bulk Scan: selected IDs, evidence/health filters, HTML report.
+# ---------------------------------------------------------------------------
+replace_once(
+    "includes/class-mediarefinspector-plugin.php",
+    "\t\t\t\t\t<button type=\"button\" class=\"button\" id=\"mediarefinspector-export-csv\" disabled><?php esc_html_e( 'Export CSV', 'media-reference-inspector' ); ?></button>",
+    "\t\t\t\t\t<button type=\"button\" class=\"button\" id=\"mediarefinspector-export-csv\" disabled><?php esc_html_e( 'Export CSV', 'media-reference-inspector' ); ?></button>\n"
+    "\t\t\t\t\t<button type=\"button\" class=\"button\" id=\"mediarefinspector-export-html\" disabled><?php esc_html_e( 'Printable HTML report', 'media-reference-inspector' ); ?></button>",
+)
+replace_once(
+    "includes/class-mediarefinspector-plugin.php",
+    "\t\t\t\t<div class=\"mediarefinspector-field mediarefinspector-field-action\">\n\t\t\t\t\t<button type=\"button\" class=\"button button-primary\" id=\"mediarefinspector-start-bulk\">",
+    "\t\t\t\t<div class=\"mediarefinspector-field mediarefinspector-field-grow\">\n"
+    "\t\t\t\t\t<label for=\"mediarefinspector-selected-ids\"><?php esc_html_e( 'Specific media IDs', 'media-reference-inspector' ); ?></label>\n"
+    "\t\t\t\t\t<input type=\"text\" id=\"mediarefinspector-selected-ids\" inputmode=\"numeric\" placeholder=\"<?php echo esc_attr__( 'Optional: 12, 34, 56', 'media-reference-inspector' ); ?>\" />\n"
+    "\t\t\t\t\t<span class=\"description\"><?php esc_html_e( 'Enter attachment IDs to scan only those items. Other search filters are ignored when IDs are supplied.', 'media-reference-inspector' ); ?></span>\n"
+    "\t\t\t\t</div>\n"
+    "\t\t\t\t<div class=\"mediarefinspector-field mediarefinspector-field-action\">\n\t\t\t\t\t<button type=\"button\" class=\"button button-primary\" id=\"mediarefinspector-start-bulk\">",
+)
+
+old_filter_row = "\t\t\t<div class=\"mediarefinspector-bulk-filter-row\" id=\"mediarefinspector-bulk-filter-row\" hidden>\n\t\t\t\t<div><label for=\"mediarefinspector-result-filter\"><?php esc_html_e( 'Show results', 'media-reference-inspector' ); ?></label>\n\t\t\t\t<select id=\"mediarefinspector-result-filter\"><option value=\"all\"><?php esc_html_e( 'All results', 'media-reference-inspector' ); ?></option><option value=\"referenced\"><?php esc_html_e( 'Referenced', 'media-reference-inspector' ); ?></option><option value=\"unreferenced\"><?php esc_html_e( 'Potential unused review', 'media-reference-inspector' ); ?></option><option value=\"error\"><?php esc_html_e( 'Needs review', 'media-reference-inspector' ); ?></option></select></div>\n\t\t\t\t<div><label for=\"mediarefinspector-result-sort\"><?php esc_html_e( 'Sort results', 'media-reference-inspector' ); ?></label>\n\t\t\t\t<select id=\"mediarefinspector-result-sort\"><option value=\"scan\"><?php esc_html_e( 'Scan order', 'media-reference-inspector' ); ?></option><option value=\"references-desc\"><?php esc_html_e( 'Most references', 'media-reference-inspector' ); ?></option><option value=\"references-asc\"><?php esc_html_e( 'Fewest references', 'media-reference-inspector' ); ?></option><option value=\"title\"><?php esc_html_e( 'Title A–Z', 'media-reference-inspector' ); ?></option></select></div>\n\t\t\t</div>"
+new_filter_row = old_filter_row[:-7] + "\n\t\t\t\t<div><label for=\"mediarefinspector-source-filter\"><?php esc_html_e( 'Evidence source', 'media-reference-inspector' ); ?></label><select id=\"mediarefinspector-source-filter\"><option value=\"all\"><?php esc_html_e( 'All sources', 'media-reference-inspector' ); ?></option><option value=\"core-id\"><?php esc_html_e( 'Exact ID / block', 'media-reference-inspector' ); ?></option><option value=\"core-url\"><?php esc_html_e( 'URL / content marker', 'media-reference-inspector' ); ?></option><option value=\"integration\"><?php esc_html_e( 'Integration metadata', 'media-reference-inspector' ); ?></option><option value=\"widget\"><?php esc_html_e( 'Widget data', 'media-reference-inspector' ); ?></option><option value=\"setting\"><?php esc_html_e( 'Site/theme setting', 'media-reference-inspector' ); ?></option></select></div>\n\t\t\t\t<div><label for=\"mediarefinspector-health-filter\"><?php esc_html_e( 'File health', 'media-reference-inspector' ); ?></label><select id=\"mediarefinspector-health-filter\"><option value=\"all\"><?php esc_html_e( 'Any health', 'media-reference-inspector' ); ?></option><option value=\"healthy\"><?php esc_html_e( 'Healthy', 'media-reference-inspector' ); ?></option><option value=\"review\"><?php esc_html_e( 'Needs review', 'media-reference-inspector' ); ?></option></select></div>\n\t\t\t</div>"
+replace_once("includes/class-mediarefinspector-plugin.php", old_filter_row, new_filter_row)
+
+# Server-side selected-item workflow.
+replace_once(
+    "includes/class-mediarefinspector-plugin.php",
+    "\t\tif ( ! in_array( $type, array( '', 'image', 'video', 'audio', 'application' ), true ) ) {\n\t\t\t$type = '';\n\t\t}\n\n\t\t$args = array(",
+    "\t\tif ( ! in_array( $type, array( '', 'image', 'video', 'audio', 'application' ), true ) ) {\n\t\t\t$type = '';\n\t\t}\n"
+    "\t\t$selected_raw = isset( $_POST['selected_ids'] ) ? sanitize_text_field( wp_unslash( $_POST['selected_ids'] ) ) : '';\n"
+    "\t\tif ( '' !== $selected_raw ) {\n"
+    "\t\t\t$selected = array_values( array_unique( array_filter( array_map( 'absint', preg_split( '/[^0-9]+/', $selected_raw ) ) ) ) );\n"
+    "\t\t\t$selected = array_slice( $selected, 0, $limit );\n"
+    "\t\t\t$valid = array();\n"
+    "\t\t\tforeach ( $selected as $candidate_id ) {\n"
+    "\t\t\t\tif ( 'attachment' === get_post_type( $candidate_id ) ) { $valid[] = $candidate_id; }\n"
+    "\t\t\t}\n"
+    "\t\t\twp_send_json_success( array( 'ids' => $valid ) );\n"
+    "\t\t}\n\n\t\t$args = array(",
+)
+
+# Bulk result evidence and file-health payload.
+replace_once(
+    "includes/class-mediarefinspector-plugin.php",
+    "\t\t$types  = array();\n\t\tforeach ( $usages as $usage ) {\n\t\t\tif ( ! empty( $usage['type'] ) ) {\n\t\t\t\t$types[] = (string) $usage['type'];\n\t\t\t}\n\t\t}\n\n\t\t$edit_attachment = get_edit_post_link( $attachment_id, 'raw' );",
+    "\t\t$types      = array();\n\t\t$sources    = array();\n\t\t$confidence = array();\n"
+    "\t\tforeach ( $usages as $usage ) {\n"
+    "\t\t\tif ( ! empty( $usage['type'] ) ) { $types[] = (string) $usage['type']; }\n"
+    "\t\t\tif ( ! empty( $usage['source_category'] ) ) { $sources[] = sanitize_key( $usage['source_category'] ); }\n"
+    "\t\t\tif ( ! empty( $usage['confidence'] ) ) { $confidence[] = (string) $usage['confidence']; }\n"
+    "\t\t}\n"
+    "\t\t$health = ( new MediaRefInspector_Audit_Service() )->get_file_health( $attachment_id );\n\n"
+    "\t\t$edit_attachment = get_edit_post_link( $attachment_id, 'raw' );",
+)
+replace_once(
+    "includes/class-mediarefinspector-plugin.php",
+    "\t\t\t\t'referenceTypes' => array_values( array_unique( $types ) ),\n\t\t\t\t'status'         => empty( $usages ) ? 'unreferenced' : 'referenced',",
+    "\t\t\t\t'referenceTypes'   => array_values( array_unique( $types ) ),\n"
+    "\t\t\t\t'sourceCategories' => array_values( array_unique( $sources ) ),\n"
+    "\t\t\t\t'confidence'       => array_values( array_unique( $confidence ) ),\n"
+    "\t\t\t\t'healthStatus'     => isset( $health['status'] ) ? sanitize_key( $health['status'] ) : 'review',\n"
+    "\t\t\t\t'status'           => empty( $usages ) ? 'unreferenced' : 'referenced',",
+)
+
+
+# ---------------------------------------------------------------------------
+# Insert Integration Coverage and Broken URLs tab before Help.
+# ---------------------------------------------------------------------------
+methods = r'''
+\t/**
+\t * Renders active/not-installed coverage for supported integrations.
+\t *
+\t * @return void
+\t */
+\tprivate function render_integration_coverage() {
+\t\tif ( ! method_exists( $this->scanner, 'get_integration_coverage' ) ) {
+\t\t\treturn;
+\t\t}
+\t\t$coverage = $this->scanner->get_integration_coverage();
+\t\t?>
+\t\t<div class="mediarefinspector-panel mediarefinspector-integration-coverage">
+\t\t\t<div class="mediarefinspector-section-heading"><div><h3><?php esc_html_e( 'Integration coverage', 'media-reference-inspector' ); ?></h3><p><?php esc_html_e( 'See which supported reference sources are available on this site. No external service is contacted.', 'media-reference-inspector' ); ?></p></div></div>
+\t\t\t<div class="mediarefinspector-coverage-grid">
+\t\t\t\t<?php foreach ( $coverage as $item ) : ?>
+\t\t\t\t\t<div class="mediarefinspector-coverage-card"><div><strong><?php echo esc_html( $item['name'] ); ?></strong><span class="mediarefinspector-health-pill <?php echo ! empty( $item['active'] ) ? 'is-healthy' : 'is-review'; ?>"><?php echo esc_html( ! empty( $item['active'] ) ? __( 'Active', 'media-reference-inspector' ) : __( 'Not installed / inactive', 'media-reference-inspector' ) ); ?></span></div><p><?php echo esc_html( $item['detail'] ); ?></p></div>
+\t\t\t\t<?php endforeach; ?>
+\t\t\t</div>
+\t\t</div>
+\t\t<?php
+\t}
+
+\t/**
+\t * Renders a bounded read-only scan for broken local uploads URLs in content.
+\t *
+\t * @return void
+\t */
+\tprivate function render_broken_tab() {
+\t\t$run = isset( $_GET['run_broken'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['run_broken'] ) );
+\t\t$run_url = wp_nonce_url( add_query_arg( array( 'page' => 'media-reference-inspector', 'tab' => 'broken', 'run_broken' => '1' ), admin_url( 'upload.php' ) ), 'mediarefinspector_run_broken', 'mediarefinspector_broken_nonce' );
+\t\t?>
+\t\t<section class="mediarefinspector-section" aria-labelledby="mediarefinspector-broken-heading">
+\t\t\t<div class="mediarefinspector-section-heading mediarefinspector-section-heading-split"><div><h2 id="mediarefinspector-broken-heading"><?php esc_html_e( 'Broken local media URLs', 'media-reference-inspector' ); ?></h2><p><?php esc_html_e( 'Check recent supported post content for URLs inside this site’s uploads directory whose local files no longer exist. The scan is read-only and makes no external requests.', 'media-reference-inspector' ); ?></p></div><a class="button button-primary" href="<?php echo esc_url( $run_url ); ?>"><?php esc_html_e( 'Scan for broken URLs', 'media-reference-inspector' ); ?></a></div>
+\t\t\t<?php if ( $run ) : ?>
+\t\t\t\t<?php $nonce = isset( $_GET['mediarefinspector_broken_nonce'] ) ? sanitize_text_field( wp_unslash( $_GET['mediarefinspector_broken_nonce'] ) ) : ''; ?>
+\t\t\t\t<?php if ( ! wp_verify_nonce( $nonce, 'mediarefinspector_run_broken' ) ) : ?>
+\t\t\t\t\t<?php $this->render_notice( __( 'The broken URL scan request could not be verified.', 'media-reference-inspector' ), 'error' ); ?>
+\t\t\t\t<?php elseif ( ! method_exists( $this->scanner, 'find_broken_local_upload_urls' ) ) : ?>
+\t\t\t\t\t<?php $this->render_notice( __( 'Broken URL scanning is not available in this build.', 'media-reference-inspector' ), 'error' ); ?>
+\t\t\t\t<?php else : ?>
+\t\t\t\t\t<?php $items = $this->scanner->find_broken_local_upload_urls( 100 ); ?>
+\t\t\t\t\t<?php if ( empty( $items ) ) : ?>
+\t\t\t\t\t\t<?php $this->render_notice( __( 'No broken local uploads URLs were found in the bounded scan.', 'media-reference-inspector' ), 'success' ); ?>
+\t\t\t\t\t<?php else : ?>
+\t\t\t\t\t\t<div class="mediarefinspector-reference-list mediarefinspector-broken-list">
+\t\t\t\t\t\t<?php foreach ( $items as $item ) : ?>
+\t\t\t\t\t\t\t<article class="mediarefinspector-reference-item"><div><strong><?php echo esc_html( $item['title'] ); ?></strong><span class="mediarefinspector-status-pill"><?php esc_html_e( 'Local file missing', 'media-reference-inspector' ); ?></span><p class="mediarefinspector-evidence"><code><?php echo esc_html( $item['url'] ); ?></code></p></div><div class="mediarefinspector-reference-actions"><?php if ( ! empty( $item['edit_url'] ) ) : ?><a class="button button-small" href="<?php echo esc_url( $item['edit_url'] ); ?>"><?php esc_html_e( 'Edit', 'media-reference-inspector' ); ?></a><?php endif; ?><?php if ( ! empty( $item['view_url'] ) ) : ?><a class="button button-small" href="<?php echo esc_url( $item['view_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View', 'media-reference-inspector' ); ?></a><?php endif; ?></div></article>
+\t\t\t\t\t\t<?php endforeach; ?>
+\t\t\t\t\t\t</div>
+\t\t\t\t\t<?php endif; ?>
+\t\t\t\t<?php endif; ?>
+\t\t\t<?php else : ?>
+\t\t\t\t<div class="mediarefinspector-empty-state"><span class="dashicons dashicons-warning" aria-hidden="true"></span><h3><?php esc_html_e( 'Ready for a local broken-link audit', 'media-reference-inspector' ); ?></h3><p><?php esc_html_e( 'Only URLs under this site’s WordPress uploads directory are checked. Remote URLs are ignored.', 'media-reference-inspector' ); ?></p></div>
+\t\t\t<?php endif; ?>
+\t\t</section>
+\t\t<?php
+\t}
+
+'''.replace('\\t', '\t')
+anchor = "\n\t/**\n\t * Renders contextual help and plugin support."
+replace_once("includes/class-mediarefinspector-plugin.php", anchor, "\n" + methods + anchor)
+
+
+# ---------------------------------------------------------------------------
+# JS enhancements for selected IDs, filters, and printable HTML export.
+# ---------------------------------------------------------------------------
+replace_once(
+    "assets/js/admin.js",
+    "\tvar exportButton = document.getElementById('mediarefinspector-export-csv');",
+    "\tvar exportButton = document.getElementById('mediarefinspector-export-csv');\n"
+    "\tvar exportHtmlButton = document.getElementById('mediarefinspector-export-html');",
+)
+replace_once(
+    "assets/js/admin.js",
+    "\tvar resultSort = document.getElementById('mediarefinspector-result-sort');",
+    "\tvar resultSort = document.getElementById('mediarefinspector-result-sort');\n"
+    "\tvar sourceFilter = document.getElementById('mediarefinspector-source-filter');\n"
+    "\tvar healthFilter = document.getElementById('mediarefinspector-health-filter');",
+)
+replace_once(
+    "assets/js/admin.js",
+    "\tvar ageInput = document.getElementById('mediarefinspector-bulk-age');",
+    "\tvar ageInput = document.getElementById('mediarefinspector-bulk-age');\n"
+    "\tvar selectedIdsInput = document.getElementById('mediarefinspector-selected-ids');",
+)
+replace_once(
+    "assets/js/admin.js",
+    "\t\tif (ageInput) {\n\t\t\tageInput.disabled = isRunning;\n\t\t}\n",
+    "\t\tif (ageInput) { ageInput.disabled = isRunning; }\n"
+    "\t\tif (selectedIdsInput) { selectedIdsInput.disabled = isRunning; }\n",
+)
+replace_once(
+    "assets/js/admin.js",
+    "\t\texportButton.disabled = true;",
+    "\t\texportButton.disabled = true;\n\t\tif (exportHtmlButton) { exportHtmlButton.disabled = true; }",
+)
+replace_once(
+    "assets/js/admin.js",
+    "\t\texportButton.disabled = results.length === 0;",
+    "\t\texportButton.disabled = results.length === 0;\n\t\tif (exportHtmlButton) { exportHtmlButton.disabled = results.length === 0; }",
+)
+replace_once(
+    "assets/js/admin.js",
+    "\t\trow.dataset.title = String(item.title || '').toLowerCase();",
+    "\t\trow.dataset.title = String(item.title || '').toLowerCase();\n"
+    "\t\trow.dataset.sources = Array.isArray(item.sourceCategories) ? item.sourceCategories.join(' ') : '';\n"
+    "\t\trow.dataset.health = item.healthStatus || 'review';",
+)
+replace_once(
+    "assets/js/admin.js",
+    "\t\tvar filter = resultFilter.value || 'all';\n\t\tvar rows = Array.prototype.slice.call(resultsBody.querySelectorAll('tr'));",
+    "\t\tvar filter = resultFilter.value || 'all';\n"
+    "\t\tvar source = sourceFilter ? (sourceFilter.value || 'all') : 'all';\n"
+    "\t\tvar health = healthFilter ? (healthFilter.value || 'all') : 'all';\n"
+    "\t\tvar rows = Array.prototype.slice.call(resultsBody.querySelectorAll('tr'));",
+)
+replace_once(
+    "assets/js/admin.js",
+    "\t\trows.forEach(function (row) { row.hidden = filter !== 'all' && row.dataset.status !== filter; });",
+    "\t\trows.forEach(function (row) {\n"
+    "\t\t\tvar statusMatch = filter === 'all' || row.dataset.status === filter;\n"
+    "\t\t\tvar sourceMatch = source === 'all' || String(row.dataset.sources || '').split(' ').indexOf(source) !== -1;\n"
+    "\t\t\tvar healthMatch = health === 'all' || row.dataset.health === health;\n"
+    "\t\t\trow.hidden = !(statusMatch && sourceMatch && healthMatch);\n"
+    "\t\t});",
+)
+replace_once(
+    "assets/js/admin.js",
+    "\tfunction exportCsv() {",
+    "\tfunction htmlEscape(value) {\n"
+    "\t\treturn String(value == null ? '' : value).replace(/[&<>\"']/g, function (char) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#039;'})[char]; });\n"
+    "\t}\n\n"
+    "\tfunction exportHtml() {\n"
+    "\t\tif (!results.length) { return; }\n"
+    "\t\tvar body = results.map(function (item) {\n"
+    "\t\t\treturn '<tr><td>' + htmlEscape(item.id) + '</td><td>' + htmlEscape(item.title || '') + '</td><td>' + htmlEscape(makeStatusLabel(item.status)) + '</td><td>' + htmlEscape(item.referenceCount || 0) + '</td><td>' + htmlEscape((item.referenceTypes || []).join(', ')) + '</td><td>' + htmlEscape(item.healthStatus || 'review') + '</td></tr>';\n"
+    "\t\t}).join('');\n"
+    "\t\tvar html = '<!doctype html><html><head><meta charset=\"utf-8\"><title>Media Reference Inspector report</title><style>body{font-family:system-ui,sans-serif;margin:32px;color:#1d2327}table{border-collapse:collapse;width:100%}th,td{border:1px solid #dcdcde;padding:8px;text-align:left}th{background:#f6f7f7}small{color:#646970}</style></head><body><h1>Media Reference Inspector</h1><p>Read-only audit report. No supported references found does not prove a file is unused.</p><table><thead><tr><th>ID</th><th>Media</th><th>Status</th><th>References</th><th>Reference types</th><th>File health</th></tr></thead><tbody>' + body + '</tbody></table></body></html>';\n"
+    "\t\tvar blob = new Blob([html], { type: 'text/html;charset=utf-8' });\n"
+    "\t\tvar link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'media-reference-inspector-report.html'; document.body.appendChild(link); link.click(); URL.revokeObjectURL(link.href); link.remove();\n"
+    "\t}\n\n"
+    "\tfunction exportCsv() {",
+)
+replace_once(
+    "assets/js/admin.js",
+    "\t\t\tlimit: limitInput.value || '100'",
+    "\t\t\tlimit: limitInput.value || '100',\n\t\t\tselected_ids: selectedIdsInput ? (selectedIdsInput.value || '') : ''",
+)
+replace_once(
+    "assets/js/admin.js",
+    "\tresultFilter.addEventListener('change', applyResultFilter);\n\tif (resultSort) { resultSort.addEventListener('change', applyResultFilter); }\n\texportButton.addEventListener('click', exportCsv);",
+    "\tresultFilter.addEventListener('change', applyResultFilter);\n"
+    "\tif (resultSort) { resultSort.addEventListener('change', applyResultFilter); }\n"
+    "\tif (sourceFilter) { sourceFilter.addEventListener('change', applyResultFilter); }\n"
+    "\tif (healthFilter) { healthFilter.addEventListener('change', applyResultFilter); }\n"
+    "\texportButton.addEventListener('click', exportCsv);\n"
+    "\tif (exportHtmlButton) { exportHtmlButton.addEventListener('click', exportHtml); }",
+)
+
+
+# ---------------------------------------------------------------------------
+# CSS for evidence, integration coverage and broken URL rows.
+# ---------------------------------------------------------------------------
+css = read("assets/css/admin.css")
+append_css = r'''
+
+/* 2.3.0 beta audit workflow */
+.mediarefinspector-evidence { margin: 6px 0 0; color: #50575e; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.mediarefinspector-evidence span { display: block; margin-top: 3px; }
+.mediarefinspector-evidence code { white-space: normal; overflow-wrap: anywhere; }
+.mediarefinspector-integration-coverage { margin: 0 0 20px; }
+.mediarefinspector-coverage-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.mediarefinspector-coverage-card { border: 1px solid #dcdcde; border-radius: 6px; padding: 12px; background: #fff; }
+.mediarefinspector-coverage-card > div { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.mediarefinspector-coverage-card p { margin: 8px 0 0; color: #646970; }
+.mediarefinspector-row-status { color: #50575e; font-weight: 600; }
+.mediarefinspector-broken-list .mediarefinspector-reference-item { align-items: flex-start; }
+.mediarefinspector-bulk-filter-row { grid-template-columns: repeat(4, minmax(160px, 1fr)); }
+@media (max-width: 1100px) { .mediarefinspector-coverage-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mediarefinspector-bulk-filter-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .mediarefinspector-coverage-grid, .mediarefinspector-bulk-filter-row { grid-template-columns: 1fr; } }
+'''
+if "/* 2.3.0 beta audit workflow */" not in css:
+    write("assets/css/admin.css", css.rstrip() + append_css)
+
+
+# ---------------------------------------------------------------------------
+# Readme beta notes. Stable tag intentionally remains 2.2.0.
+# ---------------------------------------------------------------------------
+readme = read("readme.txt")
+if "= 2.3.0 beta testing =" not in readme:
+    marker = "== Changelog =="
+    if marker not in readme:
+        raise RuntimeError("Changelog anchor missing from readme.txt")
+    beta = """= 2.3.0 beta testing =\n\nThis test build adds reference confidence/source context, integration coverage, a bounded broken local uploads URL scanner, cached Media Library scan status, selected-ID bulk scans, evidence/file-health filters, and a printable HTML report. It remains read-only.\n\n"""
+    readme = readme.replace(marker, beta + marker, 1)
+    write("readme.txt", readme)
+
+print("Applied Media Reference Inspector 2.3.0-beta.1 source changes.")
