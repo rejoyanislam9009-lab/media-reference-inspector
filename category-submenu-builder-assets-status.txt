@@ -1,3 +1,6 @@
-FAILED
+SUCCESS
 Plugin: category-submenu-builder
-Reason: could not download icon source
+Committed revision 3659821
+Assets: banner-1544x500.png, banner-772x250.png, screenshot-1.png, screenshot-2.png, screenshot-3.png, screenshot-4.png
+Readme: Screenshots section added/updated
+WordPress.org: https://wordpress.org/plugins/category-submenu-builder/
