@@ -1,0 +1,3 @@
+FAILED
+Plugin: category-submenu-builder
+Reason: could not download icon source
