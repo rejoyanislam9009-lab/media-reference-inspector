@@ -1,4 +1,0 @@
-SUCCESS
-Plugin: category-submenu-builder
-Committed revision 3659820
-Assets: icon.svg, icon-128x128.png, icon-256x256.png
