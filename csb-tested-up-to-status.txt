@@ -1,0 +1,4 @@
+SUCCESS
+Plugin: category-submenu-builder
+Committed revision 3660658
+Tested up to: 7.1
