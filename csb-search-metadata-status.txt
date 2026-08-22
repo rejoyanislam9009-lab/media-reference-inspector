@@ -1,0 +1,4 @@
+SUCCESS
+Plugin: category-submenu-builder
+No SVN changes needed
+Tags: category menu, submenu, woocommerce, menu builder, category navigation
