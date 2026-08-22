@@ -40,8 +40,8 @@ jobs:
           cd "$SVN_DIR"
           svn update --set-depth infinity trunk >/dev/null 2>&1 || fail "SVN trunk update failed"
           cp /tmp/csb-readme.txt trunk/readme.txt
-          if svn diff --quiet trunk/readme.txt; then
-            printf 'SUCCESS\nPlugin: %s\nNo SVN changes needed\n' "$SLUG" > "$STATUS_FILE"
+          if [ -z "$(svn status trunk/readme.txt)" ]; then
+            printf 'SUCCESS\nPlugin: %s\nNo SVN changes needed\nTags: category menu, submenu, woocommerce, menu builder, category navigation\n' "$SLUG" > "$STATUS_FILE"
             exit 0
           fi
           if ! svn commit trunk/readme.txt -m "Optimize Category Submenu Builder search metadata" --no-auth-cache --non-interactive --username "$SVN_USERNAME" --password "$SVN_PASSWORD" >/tmp/csb-readme-commit.log 2>&1; then
