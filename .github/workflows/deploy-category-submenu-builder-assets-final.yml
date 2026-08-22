@@ -18,7 +18,6 @@ jobs:
       SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
       SLUG: category-submenu-builder
       GENERATOR_URL: https://raw.githubusercontent.com/rejoyanislam9009-lab/category-submenu-builder/main/.wordpress-org/generate-assets.py
-      ICON_URL: https://raw.githubusercontent.com/rejoyanislam9009-lab/category-submenu-builder/main/.wordpress-org/icon.svg
     steps:
       - uses: actions/checkout@v4
 
@@ -43,7 +42,21 @@ jobs:
           rm -rf /tmp/csb-final-assets "$HOME/svn-$SLUG"
           mkdir -p /tmp/csb-final-assets
           curl -fL "$GENERATOR_URL" -o /tmp/csb-generate-assets.py || fail "could not download asset generator"
-          curl -fL "$ICON_URL" -o /tmp/csb-icon.svg || fail "could not download icon source"
+          cat > /tmp/csb-icon.svg <<'SVG'
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+            <defs>
+              <linearGradient id="bg" x1="72" y1="54" x2="448" y2="466" gradientUnits="userSpaceOnUse"><stop stop-color="#111827"/><stop offset="0.48" stop-color="#312E81"/><stop offset="1" stop-color="#6D28D9"/></linearGradient>
+              <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#38BDF8"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient>
+            </defs>
+            <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#bg)"/>
+            <circle cx="390" cy="112" r="92" fill="#A78BFA" opacity="0.09"/><circle cx="116" cy="416" r="106" fill="#38BDF8" opacity="0.07"/>
+            <rect x="82" y="102" width="348" height="92" rx="28" fill="#FFFFFF"/><rect x="130" y="210" width="300" height="92" rx="28" fill="#EEF2FF"/><rect x="82" y="318" width="348" height="92" rx="28" fill="#FFFFFF"/>
+            <rect x="108" y="129" width="38" height="38" rx="11" fill="url(#accent)"/><rect x="156" y="136" width="142" height="13" rx="6.5" fill="#111827" opacity="0.92"/><rect x="156" y="158" width="96" height="10" rx="5" fill="#64748B" opacity="0.56"/><path d="M385 138l12 10-12 10" fill="none" stroke="#4F46E5" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M106 172v78c0 14 10 24 24 24h14" fill="none" stroke="#60A5FA" stroke-width="10" stroke-linecap="round"/><circle cx="106" cy="172" r="7" fill="#60A5FA"/>
+            <rect x="156" y="237" width="38" height="38" rx="11" fill="#7C3AED"/><rect x="204" y="244" width="126" height="13" rx="6.5" fill="#1E1B4B" opacity="0.94"/><rect x="204" y="266" width="84" height="10" rx="5" fill="#6366F1" opacity="0.58"/><path d="M385 246l12 10-12 10" fill="none" stroke="#7C3AED" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="108" y="345" width="38" height="38" rx="11" fill="#06B6D4"/><rect x="156" y="352" width="160" height="13" rx="6.5" fill="#111827" opacity="0.92"/><rect x="156" y="374" width="110" height="10" rx="5" fill="#64748B" opacity="0.56"/><path d="M385 354l12 10-12 10" fill="none" stroke="#0EA5E9" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          SVG
           rsvg-convert -w 512 -h 512 /tmp/csb-icon.svg -o /tmp/csb-icon.png || fail "icon render failed"
           OUT_DIR=/tmp/csb-final-assets ICON_PATH=/tmp/csb-icon.png python3 /tmp/csb-generate-assets.py || fail "asset generation failed"
 
@@ -51,14 +64,7 @@ jobs:
           from PIL import Image
           from pathlib import Path
           root=Path('/tmp/csb-final-assets')
-          expected={
-            'banner-1544x500.png':(1544,500),
-            'banner-772x250.png':(772,250),
-            'screenshot-1.png':(1440,900),
-            'screenshot-2.png':(1440,900),
-            'screenshot-3.png':(1440,900),
-            'screenshot-4.png':(1440,900),
-          }
+          expected={'banner-1544x500.png':(1544,500),'banner-772x250.png':(772,250),'screenshot-1.png':(1440,900),'screenshot-2.png':(1440,900),'screenshot-3.png':(1440,900),'screenshot-4.png':(1440,900)}
           for name,size in expected.items():
               p=root/name
               if not p.exists() or Image.open(p).size != size:
@@ -72,7 +78,6 @@ jobs:
           svn update --set-depth infinity assets >/dev/null 2>&1 || true
           svn update --set-depth infinity trunk >/dev/null 2>&1 || true
           mkdir -p assets
-
           cp /tmp/csb-final-assets/banner-1544x500.png assets/banner-1544x500.png
           cp /tmp/csb-final-assets/banner-772x250.png assets/banner-772x250.png
           cp /tmp/csb-final-assets/screenshot-1.png assets/screenshot-1.png
@@ -88,10 +93,7 @@ jobs:
           if '== Screenshots ==' in text:
               start=text.index('== Screenshots ==')
               nxt=text.find('\n== ', start+5)
-              if nxt == -1:
-                  text=text[:start]+block
-              else:
-                  text=text[:start]+block+text[nxt+1:]
+              text=text[:start]+block+(text[nxt+1:] if nxt!=-1 else '')
           elif '== Changelog ==' in text:
               text=text.replace('== Changelog ==', block+'== Changelog ==', 1)
           else:
@@ -103,16 +105,9 @@ jobs:
           svn propset svn:mime-type image/png assets/banner-1544x500.png assets/banner-772x250.png assets/screenshot-1.png assets/screenshot-2.png assets/screenshot-3.png assets/screenshot-4.png >/dev/null || true
           svn update >/dev/null 2>&1 || true
           svn status
-
-          if ! svn commit assets trunk/readme.txt \
-            -m "Add Category Submenu Builder banner and screenshots" \
-            --no-auth-cache \
-            --non-interactive \
-            --username "$SVN_USERNAME" \
-            --password "$SVN_PASSWORD" >/tmp/csb-assets-commit.log 2>&1; then
+          if ! svn commit assets trunk/readme.txt -m "Add Category Submenu Builder banner and screenshots" --no-auth-cache --non-interactive --username "$SVN_USERNAME" --password "$SVN_PASSWORD" >/tmp/csb-assets-commit.log 2>&1; then
             fail "SVN asset commit failed"
           fi
-
           REVISION=$(grep -Eo 'Committed revision [0-9]+' /tmp/csb-assets-commit.log | tail -1 || true)
           printf 'SUCCESS\nPlugin: %s\n%s\nAssets: banner-1544x500.png, banner-772x250.png, screenshot-1.png, screenshot-2.png, screenshot-3.png, screenshot-4.png\nReadme: Screenshots section added/updated\nWordPress.org: https://wordpress.org/plugins/%s/\n' "$SLUG" "${REVISION:-Committed successfully}" "$SLUG" > "$STATUS_FILE"
 
