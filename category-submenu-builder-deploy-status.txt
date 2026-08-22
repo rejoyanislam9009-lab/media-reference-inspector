@@ -1,6 +1,0 @@
-SUCCESS
-Plugin: category-submenu-builder
-Version: 3.0.0
-Committed revision 3659817
-WordPress.org: https://wordpress.org/plugins/category-submenu-builder/
-SVN: https://plugins.svn.wordpress.org/category-submenu-builder/
