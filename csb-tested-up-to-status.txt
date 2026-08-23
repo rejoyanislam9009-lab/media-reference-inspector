@@ -1,5 +1,0 @@
-SUCCESS
-Plugin: category-submenu-builder
-Committed revision 3662061
-Trunk: Tested up to 7.1
-Tag 3.0.0: Tested up to 7.1
