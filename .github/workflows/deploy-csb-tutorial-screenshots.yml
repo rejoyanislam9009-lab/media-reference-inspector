@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Publish tutorial screenshots and stable metadata
+      - name: Generate and publish tutorial screenshots
         id: deploy
         continue-on-error: true
         shell: bash
@@ -29,26 +29,32 @@ jobs:
           STATUS_FILE="$GITHUB_WORKSPACE/csb-tutorial-screenshots-status.txt"
           rm -f "$STATUS_FILE"
           fail() { printf 'FAILED\nPlugin: %s\nReason: %s\n' "$SLUG" "$1" > "$STATUS_FILE"; exit 1; }
-
           [ -n "${SVN_PASSWORD:-}" ] || fail "WORDPRESS_SVN_PASSWORD secret unavailable"
           sudo apt-get update -y >/dev/null || fail "apt update failed"
-          sudo apt-get install -y subversion unzip >/dev/null || fail "required packages failed"
+          sudo apt-get install -y subversion python3-pip fonts-dejavu-core >/dev/null || fail "required packages failed"
+          python3 -m pip install --user pillow >/dev/null || fail "Pillow install failed"
 
           rm -rf /tmp/csb-source /tmp/csb-tutorial "$HOME/svn-$SLUG"
           git clone --depth 1 https://github.com/rejoyanislam9009-lab/category-submenu-builder.git /tmp/csb-source >/tmp/csb-git-clone.log 2>&1 || fail "could not clone source repository"
-
           README=/tmp/csb-source/readme.txt
-          ZIP=/tmp/csb-source/.wordpress-org/tutorial-screenshots.zip
+          GENERATOR=/tmp/csb-source/.wordpress-org/generate-tutorial-screenshots.py
           [ -f "$README" ] || fail "readme.txt missing"
-          [ -f "$ZIP" ] || fail "tutorial screenshot bundle missing"
+          [ -f "$GENERATOR" ] || fail "tutorial generator missing"
           grep -q '^Tested up to: 7.1$' "$README" || fail "Tested up to 7.1 missing"
           grep -q '^10\. Tutorial step 6:' "$README" || fail "tutorial screenshot captions incomplete"
 
           mkdir -p /tmp/csb-tutorial
-          unzip -q "$ZIP" -d /tmp/csb-tutorial || fail "tutorial screenshot bundle could not be extracted"
-          for n in 5 6 7 8 9 10; do
-            [ -s "/tmp/csb-tutorial/screenshot-$n.jpg" ] || fail "screenshot-$n.jpg missing"
-          done
+          OUT_DIR=/tmp/csb-tutorial python3 "$GENERATOR" || fail "tutorial image generation failed"
+          python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          root=Path('/tmp/csb-tutorial')
+          for n in range(5,11):
+              p=root/f'screenshot-{n}.jpg'
+              if not p.exists() or Image.open(p).size != (1440,900):
+                  raise SystemExit(f'invalid screenshot-{n}.jpg')
+          PY
+          [ $? -eq 0 ] || fail "tutorial image validation failed"
 
           SVN_DIR="$HOME/svn-$SLUG"
           svn checkout --depth immediates "https://plugins.svn.wordpress.org/$SLUG/" "$SVN_DIR" >/tmp/csb-svn-checkout.log 2>&1 || fail "SVN checkout failed"
@@ -57,32 +63,21 @@ jobs:
           svn update --set-depth infinity trunk >/dev/null 2>&1 || fail "SVN trunk update failed"
           svn update --set-depth infinity tags/3.0.0 >/dev/null 2>&1 || fail "SVN stable tag update failed"
           mkdir -p assets
-
-          for n in 5 6 7 8 9 10; do
-            cp "/tmp/csb-tutorial/screenshot-$n.jpg" "assets/screenshot-$n.jpg"
-          done
+          for n in 5 6 7 8 9 10; do cp "/tmp/csb-tutorial/screenshot-$n.jpg" "assets/screenshot-$n.jpg"; done
           cp "$README" trunk/readme.txt
           cp "$README" tags/3.0.0/readme.txt
-
           grep -q '^Tested up to: 7.1$' trunk/readme.txt || fail "trunk compatibility metadata incorrect"
           grep -q '^Tested up to: 7.1$' tags/3.0.0/readme.txt || fail "stable tag compatibility metadata incorrect"
-
           svn add --force assets trunk/readme.txt tags/3.0.0/readme.txt >/dev/null || fail "svn add failed"
           svn propset svn:mime-type image/jpeg assets/screenshot-5.jpg assets/screenshot-6.jpg assets/screenshot-7.jpg assets/screenshot-8.jpg assets/screenshot-9.jpg assets/screenshot-10.jpg >/dev/null || true
 
-          if [ -z "$(svn status assets trunk/readme.txt tags/3.0.0/readme.txt)" ]; then
-            printf 'SUCCESS\nPlugin: %s\nNo SVN changes needed\nTutorial screenshots: 5-10 present\nTrunk: Tested up to 7.1\nTag 3.0.0: Tested up to 7.1\n' "$SLUG" > "$STATUS_FILE"
-            exit 0
-          fi
-
-          if ! svn commit assets trunk/readme.txt tags/3.0.0/readme.txt \
-            -m "Add Category Submenu Builder setup tutorial screenshots" \
-            --no-auth-cache --non-interactive \
-            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
-            >/tmp/csb-tutorial-commit.log 2>&1; then
+          if ! svn commit assets trunk/readme.txt tags/3.0.0/readme.txt -m "Add Category Submenu Builder setup tutorial screenshots" --no-auth-cache --non-interactive --username "$SVN_USERNAME" --password "$SVN_PASSWORD" >/tmp/csb-tutorial-commit.log 2>&1; then
+            if grep -q 'No changes to commit' /tmp/csb-tutorial-commit.log; then
+              printf 'SUCCESS\nPlugin: %s\nNo SVN changes needed\nTutorial screenshots: screenshot-5.jpg through screenshot-10.jpg\nReadme captions: 1-10\nTrunk: Tested up to 7.1\nTag 3.0.0: Tested up to 7.1\n' "$SLUG" > "$STATUS_FILE"
+              exit 0
+            fi
             fail "SVN tutorial screenshot commit failed"
           fi
-
           REVISION=$(grep -Eo 'Committed revision [0-9]+' /tmp/csb-tutorial-commit.log | tail -1 || true)
           printf 'SUCCESS\nPlugin: %s\n%s\nTutorial screenshots: screenshot-5.jpg through screenshot-10.jpg\nReadme captions: 1-10\nTrunk: Tested up to 7.1\nTag 3.0.0: Tested up to 7.1\nWordPress.org: https://wordpress.org/plugins/%s/\n' "$SLUG" "${REVISION:-Committed successfully}" "$SLUG" > "$STATUS_FILE"
 
@@ -96,10 +91,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "$STATUS_FILE"
-          if ! git diff --cached --quiet; then
-            git commit -m "Record CSB tutorial screenshot deploy status"
-            git push
-          fi
+          if ! git diff --cached --quiet; then git commit -m "Record CSB tutorial screenshot deploy status" && git push; fi
 
       - name: Preserve deployment outcome
         if: steps.deploy.outcome == 'failure'
