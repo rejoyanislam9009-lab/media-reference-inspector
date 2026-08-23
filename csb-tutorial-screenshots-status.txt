@@ -1,3 +1,8 @@
-FAILED
+SUCCESS
 Plugin: category-submenu-builder
-Reason: tutorial screenshot bundle could not be extracted
+Committed revision 3662153
+Tutorial screenshots: screenshot-5.jpg through screenshot-10.jpg
+Readme captions: 1-10
+Trunk: Tested up to 7.1
+Tag 3.0.0: Tested up to 7.1
+WordPress.org: https://wordpress.org/plugins/category-submenu-builder/
