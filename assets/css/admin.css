@@ -861,3 +861,9 @@
 .mediarefinspector-bulk-filter-row { grid-template-columns: repeat(4, minmax(160px, 1fr)); }
 @media (max-width: 1100px) { .mediarefinspector-coverage-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mediarefinspector-bulk-filter-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 700px) { .mediarefinspector-coverage-grid, .mediarefinspector-bulk-filter-row { grid-template-columns: 1fr; } }
+
+
+/* 2.4.0 audit workflow additions */
+.mediarefinspector-cached-status{display:flex;align-items:center;gap:5px;margin:8px 0 0;color:#50575e;font-size:12px}.mediarefinspector-cached-status .dashicons{width:16px;height:16px;font-size:16px}.mediarefinspector-impact-preview{margin-top:16px}.mediarefinspector-impact-total{font-weight:600;white-space:nowrap}.mediarefinspector-impact-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}.mediarefinspector-impact-grid span{display:flex;justify-content:space-between;gap:12px;padding:12px;border:1px solid #dcdcde;border-radius:6px;background:#fff}.mediarefinspector-site-audit-summary{grid-template-columns:repeat(6,minmax(0,1fr));margin:16px 0}.mediarefinspector-site-audit-summary .mediarefinspector-summary-card{min-width:0}.mediarefinspector-section-actions{flex-wrap:wrap}
+@media (max-width:1200px){.mediarefinspector-impact-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mediarefinspector-site-audit-summary{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:782px){.mediarefinspector-impact-grid,.mediarefinspector-site-audit-summary{grid-template-columns:1fr}.mediarefinspector-impact-total{white-space:normal}}

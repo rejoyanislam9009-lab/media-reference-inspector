@@ -201,7 +201,12 @@ class MediaRefInspector_Audit_Service {
 			}
 			$name  = isset( $block['blockName'] ) ? (string) $block['blockName'] : '';
 			$attrs = isset( $block['attrs'] ) && is_array( $block['attrs'] ) ? $block['attrs'] : array();
-			$label = $name ? sprintf( __( 'Block: %s', 'media-reference-inspector' ), $name ) : __( 'Block content', 'media-reference-inspector' );
+			if ( $name ) {
+				/* translators: %s: Block name. */
+				$label = sprintf( __( 'Block: %s', 'media-reference-inspector' ), $name );
+			} else {
+				$label = __( 'Block content', 'media-reference-inspector' );
+			}
 
 			if ( isset( $attrs['id'] ) ) {
 				$this->add_reference( $references, $attrs['id'], $label );

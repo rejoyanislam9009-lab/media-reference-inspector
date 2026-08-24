@@ -120,9 +120,15 @@ class MediaRefInspector_Insights_Scanner extends MediaRefInspector_Advanced_Scan
 				$post         = get_post( $post_id );
 				$edit_url     = get_edit_post_link( $post_id, 'raw' );
 				$view_url     = $post && is_post_publicly_viewable( $post ) ? get_permalink( $post_id ) : '';
-				$results[]    = array(
+				if ( ! empty( $row->post_title ) ) {
+					$title = (string) $row->post_title;
+				} else {
+					/* translators: %d: Post ID. */
+					$title = sprintf( __( 'Untitled #%d', 'media-reference-inspector' ), $post_id );
+				}
+				$results[] = array(
 					'post_id'   => $post_id,
-					'title'     => ! empty( $row->post_title ) ? (string) $row->post_title : sprintf( __( 'Untitled #%d', 'media-reference-inspector' ), $post_id ),
+					'title'     => $title,
 					'post_type' => (string) $row->post_type,
 					'url'       => $url,
 					'file'      => wp_basename( $path ),
