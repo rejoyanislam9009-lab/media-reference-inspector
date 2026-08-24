@@ -6,23 +6,26 @@ Media Reference Inspector is a lightweight, read-only WordPress admin tool that 
 
 ## Current release
 
-- Version: `2.3.0`
+- Version: `2.4.0`
 - WordPress.org slug: `media-reference-inspector`
 - Requires WordPress: `6.2+`
 - Requires PHP: `7.4+`
-- Tested up to: `7.0`
+- Tested up to: `7.1`
 - License: `GPL-2.0-or-later`
 
-## Highlights in 2.3.0
+## Highlights in 2.4.0
 
-- Reference evidence details with confidence, source category, and context for supported scan results.
-- Integration coverage status for WordPress Core, WooCommerce, Elementor, and ACF.
-- Bounded Broken URLs scanner for local WordPress uploads URLs whose local files are missing.
-- Short-lived local scan-status caching for on-demand Media Library reference status.
-- Selected attachment-ID support in Bulk Scan.
-- Bulk Scan evidence/source and file-health filtering.
-- Printable HTML audit reports alongside CSV export.
-- Existing Scanner, Page & Post Audit, exact Duplicate Finder, ACF/WooCommerce/Elementor/widget checks, media file health, support form, responsive admin UI, and per-user NEW badges remain supported.
+- Media Impact Preview on single-item scans.
+- Bounded generic media-like post, term, and selected option metadata validation.
+- Known Yoast SEO and Rank Math social-image metadata checks.
+- Validated Bricks, Divi, and Beaver Builder media-reference coverage.
+- Media Library cached reference status/counts with explicit Re-scan actions.
+- Bounded Site Audit Summary for recent Media Library items.
+- JSON export alongside CSV and printable HTML reports.
+- Improved Bulk Scan evidence/source and file-health filtering.
+- Per-user NEW badges, a clearer in-plugin What's New panel, and a one-time admin What's New notice after updating.
+- WordPress 7.1 compatibility metadata and validation.
+- Existing Scanner, Broken URLs, Page & Post Audit, exact Duplicate Finder, ACF/WooCommerce/Elementor/widget checks, media file health, and support form remain supported.
 
 ## Safety-first behavior
 
@@ -47,7 +50,7 @@ The recommended installation method is through the WordPress Plugin Directory:
 2. Search for **Media Reference Inspector**.
 3. Install and activate the plugin.
 4. Go to **Media > Media References**.
-5. Use **Scanner** for one attachment, **Bulk Scan** for a bounded audit batch, **Broken URLs** for missing local uploads files referenced in content, **Page Audit** for post/page media review, or **Duplicates** for exact-file duplicate review.
+5. Use **Scanner** for one attachment, **Bulk Scan** for a bounded audit batch, **Broken URLs** for missing local uploads files referenced in content, **Page Audit** for post/page media review, **Duplicates** for exact-file duplicate review, or **Site Audit** for a bounded recent-media overview.
 
 ## Support and feedback
 
@@ -63,4 +66,4 @@ Development issues and feature requests may be opened in this GitHub repository.
 
 The GitHub repository is the development source. WordPress.org is the canonical distribution channel for stable releases.
 
-WordPress.org-specific icons, banners, and screenshots live in `.wordpress-org/` and are excluded from the installable plugin package. Release validation checks the plugin version, stable tag, PHP syntax, and JavaScript syntax before publishing to the WordPress.org SVN repository.
+WordPress.org-specific icons and banners live in `.wordpress-org/` and are excluded from the installable plugin package. Corrupt legacy screenshots were removed in 2.4.0; only real, verified plugin UI captures should be added back as screenshots. Release validation checks the plugin version, stable tag, PHP syntax, JavaScript syntax, and WordPress SQL/nonce/i18n checks before publishing to the WordPress.org SVN repository.
