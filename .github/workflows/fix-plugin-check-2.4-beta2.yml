@@ -24,6 +24,7 @@ jobs:
           set -euo pipefail
           if [ ! -f .plugin-check-fixed-2.4-beta2 ]; then
             python3 .github/scripts/fix-plugin-check-2.4-beta2.py
+            python3 .github/scripts/fix-plugin-check-2.4-beta2-pass2.py
           fi
 
       - name: Validate PHP JavaScript and release metadata
