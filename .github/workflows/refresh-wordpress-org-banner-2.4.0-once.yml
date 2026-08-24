@@ -1,0 +1,130 @@
+name: Refresh WordPress.org banner 2.4.0 once
+
+on:
+  push:
+    paths:
+      - '.asset-banner-trigger-240'
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-banner:
+    runs-on: ubuntu-latest
+    env:
+      SLUG: media-reference-inspector
+      SVN_USERNAME: rejoyan9009
+      SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          ref: main
+
+      - name: Build mobile-safe banner variants
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet pillow
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import statistics
+
+          root = Path('.wordpress-org')
+          source_path = root / 'banner-1544x500.png'
+          source = Image.open(source_path).convert('RGB')
+          if source.size != (1544, 500):
+              raise SystemExit(f'Unexpected source banner size: {source.size}')
+
+          # Use the median colour from the outer edge so the added safe area
+          # blends with the existing artwork without inventing new artwork.
+          px = source.load()
+          edge = []
+          step = 4
+          for x in range(0, source.width, step):
+              edge.append(px[x, 0])
+              edge.append(px[x, source.height - 1])
+          for y in range(0, source.height, step):
+              edge.append(px[0, y])
+              edge.append(px[source.width - 1, y])
+          bg = tuple(int(statistics.median([p[i] for p in edge])) for i in range(3))
+
+          def make_safe(size, out_path):
+              canvas = Image.new('RGB', size, bg)
+              # Keep important artwork away from edges for WordPress mobile modal cropping.
+              inner_w = int(size[0] * 0.80)
+              inner_h = int(size[1] * 0.80)
+              inner = source.resize((inner_w, inner_h), Image.Resampling.LANCZOS)
+              x = (size[0] - inner_w) // 2
+              y = (size[1] - inner_h) // 2
+              canvas.paste(inner, (x, y))
+              canvas.save(out_path, 'PNG', optimize=True)
+
+          make_safe((1544, 500), root / 'banner-1544x500.png')
+          make_safe((772, 250), root / 'banner-772x250.png')
+
+          for path, expected in [
+              (root / 'banner-1544x500.png', (1544, 500)),
+              (root / 'banner-772x250.png', (772, 250)),
+          ]:
+              with Image.open(path) as im:
+                  if im.size != expected or im.format != 'PNG':
+                      raise SystemExit(f'Invalid banner output: {path} {im.size} {im.format}')
+          PY
+
+      - name: Commit banner assets to GitHub
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .wordpress-org/banner-1544x500.png .wordpress-org/banner-772x250.png
+          if git diff --cached --quiet; then
+            echo 'Banner files already match the mobile-safe layout.'
+          else
+            git commit -m 'Polish WordPress.org banner safe area'
+            git push origin HEAD:main
+          fi
+
+      - name: Install Subversion
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v svn >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y subversion
+          fi
+
+      - name: Sync WordPress.org assets only
+        shell: bash
+        run: |
+          set -euo pipefail
+          SVN_DIR="${HOME}/svn-${SLUG}-assets"
+          svn checkout --depth immediates "https://plugins.svn.wordpress.org/${SLUG}/" "$SVN_DIR"
+          cd "$SVN_DIR"
+          svn update --set-depth infinity assets
+          rsync -rc --delete "$GITHUB_WORKSPACE/.wordpress-org/" assets/
+          svn add assets --force >/dev/null
+          while IFS= read -r path; do
+            [ -n "$path" ] && svn rm "$path"
+          done < <(svn status assets | awk '/^!/ { sub(/^! +/, ""); print }')
+          if compgen -G 'assets/*.png' > /dev/null; then
+            svn propset svn:mime-type image/png assets/*.png >/dev/null
+          fi
+          if compgen -G 'assets/*.svg' > /dev/null; then
+            svn propset svn:mime-type image/svg+xml assets/*.svg >/dev/null || true
+          fi
+          if [ -z "$(svn status assets)" ]; then
+            echo 'No SVN asset changes were required.'
+          else
+            svn commit -m 'Refresh Media Reference Inspector 2.4.0 banner assets' \
+              --no-auth-cache --non-interactive \
+              --username "$SVN_USERNAME" --password "$SVN_PASSWORD"
+          fi
+          REVISION=$(svn info --show-item revision)
+          cd "$GITHUB_WORKSPACE"
+          printf 'success revision=%s\n' "$REVISION" > .asset-banner-result-240
+          git add .asset-banner-result-240
+          git commit -m 'Record WordPress.org banner refresh result' || true
+          git push origin HEAD:main
