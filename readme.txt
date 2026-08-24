@@ -3,7 +3,7 @@ Contributors: rejoyan9009
 Tags: media library, media usage, attachments, references, admin tools
 Requires at least: 6.2
 Tested up to: 7.1
-Stable tag: 2.4.0-beta.2
+Stable tag: 2.4.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -83,14 +83,6 @@ Media Reference Inspector does not send media or site data to analytics or telem
 3. Go to Media > Media References.
 4. Use Scanner for one media item, Bulk Scan for a batch audit, Broken URLs for missing local uploads files referenced in content, Page Audit for post/page media review, Duplicates for exact-file checks, or Help for documentation and support.
 
-== Screenshots ==
-
-1. Scanner media selection and supported integration coverage.
-2. Scan result with evidence, Media Impact Preview, and file health.
-3. Bulk Scan filters, progress, results, and CSV/HTML/JSON export actions.
-4. Broken local uploads URL audit.
-5. Page & Post Audit with media and broken attachment-ID review.
-6. Site Audit Summary and duplicate/integration review tools.
 
 == Frequently Asked Questions ==
 
@@ -124,7 +116,7 @@ The scanner and support form require the `manage_options` capability because sca
 
 == Changelog ==
 
-= 2.4.0-beta.2 =
+= 2.4.0 =
 * Added Media Impact Preview for already-computed single-scan results.
 * Added bounded generic media-like post meta, term meta, and selected option validation.
 * Added known Yoast SEO and Rank Math social-image metadata checks.
@@ -133,9 +125,10 @@ The scanner and support form require the `manage_options` capability because sca
 * Added a bounded manual Site Audit Summary for up to 100 recent media items.
 * Added JSON export alongside CSV and printable HTML reports.
 * Added 2.4 NEW badges and updated What’s New guidance.
-* Updated compatibility metadata to WordPress 7.1 for beta validation.
-* Removed corrupt WordPress.org screenshot assets; real 2.4 screenshots will be captured from the tested plugin UI before publication.
-* Kept WordPress.org banner sources for re-validation and re-sync during the approved stable release.
+* Added a one-time WordPress admin What’s New notice for existing installs after updating to 2.4.0.
+* Updated compatibility metadata and validation for WordPress 7.1.
+* Removed corrupt legacy WordPress.org screenshot assets so broken screenshots are no longer served.
+* Revalidated WordPress.org banner sources for stable asset re-sync.
 * Preserved read-only behavior and added stricter bounds to new metadata queries.
 
 = 2.3.0 =

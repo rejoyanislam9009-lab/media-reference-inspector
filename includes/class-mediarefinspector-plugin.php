@@ -379,6 +379,7 @@ class MediaRefInspector_Plugin {
 	}
 
 
+
 	/**
 	 * Shows a compact What's New card until new feature tabs have been visited.
 	 *
@@ -388,10 +389,18 @@ class MediaRefInspector_Plugin {
 		if ( ! $this->is_new_feature( 'bulk' ) && ! $this->is_new_feature( 'site-audit' ) ) {
 			return;
 		}
+		$bulk_url = add_query_arg( array( 'page' => 'media-reference-inspector', 'tab' => 'bulk' ), admin_url( 'upload.php' ) );
+		$site_audit_url = add_query_arg( array( 'page' => 'media-reference-inspector', 'tab' => 'site-audit' ), admin_url( 'upload.php' ) );
 		?>
 		<div class="mediarefinspector-whats-new mediarefinspector-panel">
-			<div><span class="mediarefinspector-new-badge"><?php esc_html_e( 'NEW', 'media-reference-inspector' ); ?></span><strong><?php esc_html_e( 'Media audit coverage expanded in 2.4', 'media-reference-inspector' ); ?></strong></div>
-			<p><?php esc_html_e( 'New metadata, SEO/social and builder checks, Media Impact Preview, cached usage counts, Site Audit and JSON export are available in this test build.', 'media-reference-inspector' ); ?></p>
+			<div><span class="mediarefinspector-new-badge"><?php esc_html_e( 'NEW', 'media-reference-inspector' ); ?></span><strong><?php esc_html_e( 'What’s new in Media Reference Inspector 2.4.0', 'media-reference-inspector' ); ?></strong></div>
+			<ul class="mediarefinspector-check-list">
+				<li><strong><?php esc_html_e( 'Scanner:', 'media-reference-inspector' ); ?></strong> <?php esc_html_e( 'Media Impact Preview plus expanded metadata, SEO/social, Bricks, Divi, and Beaver Builder reference checks.', 'media-reference-inspector' ); ?></li>
+				<li><strong><?php esc_html_e( 'Bulk Scan:', 'media-reference-inspector' ); ?></strong> <?php esc_html_e( 'Selected media IDs, evidence and file-health filters, and JSON export alongside CSV and printable HTML.', 'media-reference-inspector' ); ?></li>
+				<li><strong><?php esc_html_e( 'Site Audit:', 'media-reference-inspector' ); ?></strong> <?php esc_html_e( 'A bounded read-only overview of recent media references, file health, broken local URLs, and duplicate groups.', 'media-reference-inspector' ); ?></li>
+				<li><strong><?php esc_html_e( 'Media Library:', 'media-reference-inspector' ); ?></strong> <?php esc_html_e( 'Recent cached reference status and explicit Re-scan actions without heavy automatic page-load scans.', 'media-reference-inspector' ); ?></li>
+			</ul>
+			<p><a class="button" href="<?php echo esc_url( $bulk_url ); ?>"><?php esc_html_e( 'Open Bulk Scan', 'media-reference-inspector' ); ?></a> <a class="button button-primary" href="<?php echo esc_url( $site_audit_url ); ?>"><?php esc_html_e( 'Open Site Audit', 'media-reference-inspector' ); ?></a></p>
 		</div>
 		<?php
 	}
