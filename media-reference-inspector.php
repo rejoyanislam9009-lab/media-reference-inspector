@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Media Reference Inspector
  * Description:       Find where a Media Library item is referenced in standard WordPress content before you replace or remove it.
- * Version:           2.3.0
+ * Version:           2.4.0-beta.1
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            rejoyan9009
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'MEDIAREFINSPECTOR_VERSION', '2.3.0' );
+define( 'MEDIAREFINSPECTOR_VERSION', '2.4.0-beta.1' );
 define( 'MEDIAREFINSPECTOR_FILE', __FILE__ );
 define( 'MEDIAREFINSPECTOR_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -26,7 +26,9 @@ require_once MEDIAREFINSPECTOR_PATH . 'includes/class-mediarefinspector-enhanced
 require_once MEDIAREFINSPECTOR_PATH . 'includes/class-mediarefinspector-integration-scanner.php';
 require_once MEDIAREFINSPECTOR_PATH . 'includes/class-mediarefinspector-advanced-scanner.php';
 require_once MEDIAREFINSPECTOR_PATH . 'includes/class-mediarefinspector-insights-scanner.php';
+require_once MEDIAREFINSPECTOR_PATH . 'includes/class-mediarefinspector-extended-scanner.php';
 require_once MEDIAREFINSPECTOR_PATH . 'includes/class-mediarefinspector-audit-service.php';
+require_once MEDIAREFINSPECTOR_PATH . 'includes/class-mediarefinspector-site-audit-service.php';
 require_once MEDIAREFINSPECTOR_PATH . 'includes/class-mediarefinspector-plugin.php';
 
 /**
@@ -35,7 +37,7 @@ require_once MEDIAREFINSPECTOR_PATH . 'includes/class-mediarefinspector-plugin.p
  * @return void
  */
 function mediarefinspector_run() {
-	$plugin = new MediaRefInspector_Plugin( new MediaRefInspector_Insights_Scanner() );
+	$plugin = new MediaRefInspector_Plugin( new MediaRefInspector_Extended_Scanner() );
 	$plugin->register();
 }
 add_action( 'plugins_loaded', 'mediarefinspector_run' );
