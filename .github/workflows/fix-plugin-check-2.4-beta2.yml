@@ -52,7 +52,7 @@ jobs:
           set -euo pipefail
           PHPCS="$HOME/.composer/vendor/bin/phpcs"
           "$PHPCS" --standard=WordPress --extensions=php \
-            --sniffs=WordPress.DB.PreparedSQL,WordPress.DB.PreparedSQLPlaceholders,WordPress.Security.NonceVerification,WordPress.WP.I18n.MissingTranslatorsComment \
+            --sniffs=WordPress.DB.PreparedSQL,WordPress.DB.PreparedSQLPlaceholders,WordPress.Security.NonceVerification,WordPress.WP.I18n \
             includes/class-mediarefinspector-integration-scanner.php \
             includes/class-mediarefinspector-extended-scanner.php \
             includes/class-mediarefinspector-audit-service.php \
