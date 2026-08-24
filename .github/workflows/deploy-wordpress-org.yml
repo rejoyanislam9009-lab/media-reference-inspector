@@ -6,7 +6,7 @@ on:
       version:
         description: Version to publish to WordPress.org
         required: true
-        default: "2.3.0"
+        default: "2.4.0"
   push:
     tags:
       - "v*"
@@ -36,8 +36,20 @@ jobs:
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           grep -Eq "^[[:space:]]*\* Version:[[:space:]]+$VERSION[[:space:]]*$" media-reference-inspector.php
           grep -Eq "^Stable tag:[[:space:]]+$VERSION[[:space:]]*$" readme.txt
-          find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
+          find media-reference-inspector.php includes -name '*.php' -print0 | xargs -0 -n1 php -l
           node --check assets/js/admin.js
+
+      - name: Build clean WordPress package
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPORT_DIR="${HOME}/export-${SLUG}"
+          rm -rf "$EXPORT_DIR"
+          mkdir -p "$EXPORT_DIR/assets/css" "$EXPORT_DIR/assets/js" "$EXPORT_DIR/includes"
+          cp media-reference-inspector.php readme.txt "$EXPORT_DIR/"
+          cp assets/css/admin.css "$EXPORT_DIR/assets/css/"
+          cp assets/js/admin.js "$EXPORT_DIR/assets/js/"
+          cp includes/*.php "$EXPORT_DIR/includes/"
 
       - name: Install Subversion
         shell: bash
@@ -67,12 +79,6 @@ jobs:
             exit 1
           fi
 
-          rm -rf "$EXPORT_DIR"
-          mkdir -p "$EXPORT_DIR"
-          cd "$GITHUB_WORKSPACE"
-          git archive HEAD | tar -x -C "$EXPORT_DIR"
-
-          cd "$SVN_DIR"
           rsync -rc --delete "$EXPORT_DIR/" trunk/
           rsync -rc --delete "$GITHUB_WORKSPACE/.wordpress-org/" assets/
 
