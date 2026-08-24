@@ -1,0 +1,134 @@
+name: Build and sync banner assets from PR
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  banner-assets:
+    if: github.head_ref == 'assets/2.4.0-screenshots-banner'
+    runs-on: ubuntu-latest
+    env:
+      SLUG: media-reference-inspector
+      SVN_USERNAME: rejoyan9009
+      SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
+    steps:
+      - name: Check out asset branch
+        uses: actions/checkout@v6
+        with:
+          ref: assets/2.4.0-screenshots-banner
+
+      - name: Stop if already completed
+        id: guard
+        shell: bash
+        run: |
+          if [ -f .asset-banner-pr-done ]; then
+            echo 'done=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'done=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build center-safe banner variants
+        if: steps.guard.outputs.done != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet pillow
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import statistics
+
+          root = Path('.wordpress-org')
+          source = Image.open(root / 'banner-1544x500.png').convert('RGB')
+          if source.size != (1544, 500):
+              raise SystemExit(f'Unexpected source banner size: {source.size}')
+
+          px = source.load()
+          edge = []
+          for x in range(0, source.width, 4):
+              edge += [px[x, 0], px[x, source.height - 1]]
+          for y in range(0, source.height, 4):
+              edge += [px[0, y], px[source.width - 1, y]]
+          bg = tuple(int(statistics.median([p[i] for p in edge])) for i in range(3))
+
+          def render(size, path):
+              canvas = Image.new('RGB', size, bg)
+              # 10% safe margin on each side keeps the important artwork away
+              # from the mobile modal crop while preserving the original design.
+              inner = source.resize((int(size[0] * .80), int(size[1] * .80)), Image.Resampling.LANCZOS)
+              canvas.paste(inner, ((size[0]-inner.width)//2, (size[1]-inner.height)//2))
+              canvas.save(path, 'PNG', optimize=True)
+
+          render((1544, 500), root / 'banner-1544x500.png')
+          render((772, 250), root / 'banner-772x250.png')
+          PY
+
+      - name: Validate banner files
+        if: steps.guard.outputs.done != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from PIL import Image
+          for path, expected in [
+              ('.wordpress-org/banner-1544x500.png', (1544, 500)),
+              ('.wordpress-org/banner-772x250.png', (772, 250)),
+          ]:
+              with Image.open(path) as im:
+                  assert im.format == 'PNG', (path, im.format)
+                  assert im.size == expected, (path, im.size)
+          print('banner validation passed')
+          PY
+
+      - name: Commit generated banners to asset branch
+        if: steps.guard.outputs.done != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .wordpress-org/banner-1544x500.png .wordpress-org/banner-772x250.png
+          if ! git diff --cached --quiet; then
+            git commit -m 'Polish WordPress.org banner safe area'
+            git push origin HEAD:assets/2.4.0-screenshots-banner
+          fi
+
+      - name: Install Subversion
+        if: steps.guard.outputs.done != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v svn >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y subversion
+          fi
+
+      - name: Sync WordPress.org banner assets
+        if: steps.guard.outputs.done != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          SVN_DIR="${HOME}/svn-${SLUG}-assets"
+          svn checkout --depth immediates "https://plugins.svn.wordpress.org/${SLUG}/" "$SVN_DIR"
+          cd "$SVN_DIR"
+          svn update --set-depth infinity assets
+          cp "$GITHUB_WORKSPACE/.wordpress-org/banner-1544x500.png" assets/banner-1544x500.png
+          cp "$GITHUB_WORKSPACE/.wordpress-org/banner-772x250.png" assets/banner-772x250.png
+          svn add assets/banner-1544x500.png assets/banner-772x250.png --force >/dev/null
+          svn propset svn:mime-type image/png assets/banner-1544x500.png assets/banner-772x250.png >/dev/null
+          if [ -n "$(svn status assets/banner-1544x500.png assets/banner-772x250.png)" ]; then
+            svn commit -m 'Refresh Media Reference Inspector 2.4.0 banner safe area' \
+              --no-auth-cache --non-interactive \
+              --username "$SVN_USERNAME" --password "$SVN_PASSWORD"
+          fi
+          REVISION=$(svn info --show-item revision)
+          cd "$GITHUB_WORKSPACE"
+          printf 'success revision=%s\n' "$REVISION" > .asset-banner-pr-done
+          git add .asset-banner-pr-done
+          git commit -m 'Record banner asset sync result'
+          git push origin HEAD:assets/2.4.0-screenshots-banner
