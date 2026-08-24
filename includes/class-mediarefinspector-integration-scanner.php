@@ -372,7 +372,12 @@ class MediaRefInspector_Integration_Scanner extends MediaRefInspector_Enhanced_S
 		$post_status      = isset( $row->post_status ) ? (string) $row->post_status : '';
 		$post_type_object = get_post_type_object( $post_type );
 		$post_type_label  = $post_type_object && isset( $post_type_object->labels->singular_name ) ? $post_type_object->labels->singular_name : $post_type;
-		$title            = ! empty( $row->post_title ) ? (string) $row->post_title : sprintf( __( 'Untitled #%d', 'media-reference-inspector' ), $post_id );
+		if ( ! empty( $row->post_title ) ) {
+			$title = (string) $row->post_title;
+		} else {
+			/* translators: %d: Post ID. */
+			$title = sprintf( __( 'Untitled #%d', 'media-reference-inspector' ), $post_id );
+		}
 		$status_object    = get_post_status_object( $post_status );
 		$status_label     = $status_object && isset( $status_object->label ) ? $status_object->label : $post_status;
 		$edit_url         = get_edit_post_link( $post_id, 'raw' );

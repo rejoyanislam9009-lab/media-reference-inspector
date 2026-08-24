@@ -84,7 +84,7 @@ class MediaRefInspector_Extended_Scanner extends MediaRefInspector_Insights_Scan
 			AND p.post_status NOT IN ( 'auto-draft', 'trash' )
 			ORDER BY p.ID DESC LIMIT 200";
 		$params = array_merge( array( $wpdb->posts, $wpdb->postmeta ), $args );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Read-only reference audit.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Query structure is static apart from generated placeholders; all values are passed to prepare().
 		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $params ) );
 		$usages = array();
 		foreach ( is_array( $rows ) ? $rows : array() as $row ) {
@@ -118,7 +118,7 @@ class MediaRefInspector_Extended_Scanner extends MediaRefInspector_Insights_Scan
 			AND ( pm.meta_value LIKE %s OR pm.meta_value LIKE %s )
 			AND p.post_status NOT IN ( 'auto-draft', 'trash' )
 			ORDER BY p.ID DESC LIMIT 200";
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Read-only builder audit.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Builder key list is converted to placeholders and all values are passed to prepare().
 		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $params ) );
 		$usages = array();
 		foreach ( is_array( $rows ) ? $rows : array() as $row ) {
@@ -130,10 +130,11 @@ class MediaRefInspector_Extended_Scanner extends MediaRefInspector_Insights_Scan
 		}
 
 		// Divi stores most module configuration in post_content shortcodes.
-		$id_like = '%' . $wpdb->esc_like( (string) $attachment_id ) . '%';
-		$url_like = '%' . $wpdb->esc_like( $url ) . '%';
+		$id_like     = '%' . $wpdb->esc_like( (string) $attachment_id ) . '%';
+		$url_like    = '%' . $wpdb->esc_like( $url ) . '%';
+		$divi_marker = '%' . $wpdb->esc_like( '[et_pb_' ) . '%';
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Read-only builder audit.
-		$divi_rows = $wpdb->get_results( $wpdb->prepare( "SELECT ID, post_title, post_type, post_status, post_content FROM %i WHERE post_content LIKE '%%[et_pb_%%' AND ( post_content LIKE %s OR post_content LIKE %s ) AND post_status NOT IN ( 'auto-draft', 'trash' ) ORDER BY ID DESC LIMIT 200", $wpdb->posts, $id_like, $url_like ) );
+		$divi_rows = $wpdb->get_results( $wpdb->prepare( "SELECT ID, post_title, post_type, post_status, post_content FROM %i WHERE post_content LIKE %s AND ( post_content LIKE %s OR post_content LIKE %s ) AND post_status NOT IN ( 'auto-draft', 'trash' ) ORDER BY ID DESC LIMIT 200", $wpdb->posts, $divi_marker, $id_like, $url_like ) );
 		foreach ( is_array( $divi_rows ) ? $divi_rows : array() as $row ) {
 			$content = (string) $row->post_content;
 			$id_match = preg_match( '/(?:image_id|gallery_ids|attachment_id)=["\x27][^"\x27]*\\b' . preg_quote( (string) $attachment_id, '/' ) . '\\b[^"\x27]*["\x27]/i', $content );
@@ -197,6 +198,7 @@ class MediaRefInspector_Extended_Scanner extends MediaRefInspector_Insights_Scan
 			$usages[] = array(
 				'key' => 'termmeta:' . absint( $row->term_id ) . ':' . sanitize_key( $row->meta_key ),
 				'type' => __( 'Term media metadata', 'media-reference-inspector' ),
+				/* translators: 1: Taxonomy name, 2: Term name. */
 				'label' => sprintf( __( '%1$s: %2$s', 'media-reference-inspector' ), (string) $row->taxonomy, (string) $row->name ),
 				'status' => __( 'Term metadata', 'media-reference-inspector' ),
 				'edit_url' => $edit ? $edit : '', 'view_url' => '', 'confidence' => __( 'High', 'media-reference-inspector' ),
@@ -226,6 +228,7 @@ class MediaRefInspector_Extended_Scanner extends MediaRefInspector_Insights_Scan
 			}
 			$usages[] = array(
 				'key' => 'option:' . sanitize_key( $row->option_name ), 'type' => __( 'Site media setting', 'media-reference-inspector' ),
+				/* translators: %s: WordPress option name. */
 				'label' => sprintf( __( 'Option: %s', 'media-reference-inspector' ), (string) $row->option_name ), 'status' => __( 'Site option', 'media-reference-inspector' ),
 				'edit_url' => admin_url( 'options-general.php' ), 'view_url' => '', 'confidence' => __( 'High', 'media-reference-inspector' ),
 				'source' => __( 'Validated media-like option value', 'media-reference-inspector' ), 'source_category' => 'metadata', 'context' => (string) $row->option_name,
@@ -313,6 +316,7 @@ class MediaRefInspector_Extended_Scanner extends MediaRefInspector_Insights_Scan
 		$view = $post && is_post_publicly_viewable( $post ) ? get_permalink( $post_id ) : '';
 		return array(
 			'key' => $key . ':' . $post_id, 'type' => $type,
+			/* translators: 1: Post title, 2: Post ID. */
 			'label' => sprintf( __( '%1$s (ID %2$d)', 'media-reference-inspector' ), get_the_title( $post_id ) ? get_the_title( $post_id ) : __( 'Untitled', 'media-reference-inspector' ), $post_id ),
 			'status' => isset( $row->post_status ) ? (string) $row->post_status : __( 'Saved data', 'media-reference-inspector' ),
 			'edit_url' => $edit ? $edit : '', 'view_url' => $view ? $view : '',

@@ -40,8 +40,9 @@ class MediaRefInspector_Advanced_Scanner extends MediaRefInspector_Integration_S
 	private function find_acf_usages( $attachment_id ) {
 		global $wpdb;
 
-		$serialized_id = '%' . $wpdb->esc_like( 'i:' . $attachment_id . ';' ) . '%';
-		$string_id     = '%' . $wpdb->esc_like( '"' . $attachment_id . '"' ) . '%';
+		$serialized_id   = '%' . $wpdb->esc_like( 'i:' . $attachment_id . ';' ) . '%';
+		$string_id       = '%' . $wpdb->esc_like( '"' . $attachment_id . '"' ) . '%';
+		$private_key_like = $wpdb->esc_like( '_' ) . '%';
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Reference inspection must read current ACF metadata.
 		$rows = $wpdb->get_results(
@@ -49,13 +50,14 @@ class MediaRefInspector_Advanced_Scanner extends MediaRefInspector_Integration_S
 				"SELECT p.ID, p.post_title, p.post_type, p.post_status, pm.meta_key, pm.meta_value
 				FROM %i p
 				INNER JOIN %i pm ON p.ID = pm.post_id
-				WHERE pm.meta_key NOT LIKE '\\_%'
+				WHERE pm.meta_key NOT LIKE %s
 				AND p.post_status NOT IN ( 'auto-draft', 'trash' )
 				AND ( pm.meta_value = %s OR pm.meta_value LIKE %s OR pm.meta_value LIKE %s )
 				ORDER BY p.post_type ASC, p.post_title ASC
 				LIMIT 200",
 				$wpdb->posts,
 				$wpdb->postmeta,
+				$private_key_like,
 				(string) $attachment_id,
 				$serialized_id,
 				$string_id

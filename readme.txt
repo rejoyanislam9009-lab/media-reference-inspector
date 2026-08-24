@@ -3,7 +3,7 @@ Contributors: rejoyan9009
 Tags: media library, media usage, attachments, references, admin tools
 Requires at least: 6.2
 Tested up to: 7.1
-Stable tag: 2.3.0
+Stable tag: 2.4.0-beta.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -124,7 +124,7 @@ The scanner and support form require the `manage_options` capability because sca
 
 == Changelog ==
 
-= 2.4.0-beta.1 =
+= 2.4.0-beta.2 =
 * Added Media Impact Preview for already-computed single-scan results.
 * Added bounded generic media-like post meta, term meta, and selected option validation.
 * Added known Yoast SEO and Rank Math social-image metadata checks.

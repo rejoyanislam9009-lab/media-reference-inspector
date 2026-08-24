@@ -177,7 +177,7 @@ class MediaRefInspector_Enhanced_Scanner extends MediaRefInspector_Scanner {
 			LIMIT 200";
 
 		// Dynamic fragments contain only static LIKE clauses with prepared placeholders.
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- All URL data is passed to prepare().
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Dynamic fragments contain static placeholders only; all URL values are passed to prepare().
 		$rows = $wpdb->get_results( $wpdb->prepare( $query, $query_args ) );
 
 		$usages = array();
@@ -218,7 +218,7 @@ class MediaRefInspector_Enhanced_Scanner extends MediaRefInspector_Scanner {
 			LIMIT 100";
 
 		// Dynamic IN fragment contains only prepared placeholders.
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- All URL data is passed to prepare().
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Dynamic IN fragment contains placeholders only; all URL values are passed to prepare().
 		$rows = $wpdb->get_results( $wpdb->prepare( $query, $query_args ) );
 
 		$usages = array();
@@ -395,7 +395,12 @@ class MediaRefInspector_Enhanced_Scanner extends MediaRefInspector_Scanner {
 		$post_status      = isset( $row->post_status ) ? $row->post_status : '';
 		$post_type_object = get_post_type_object( $post_type );
 		$post_type_label  = $post_type_object && isset( $post_type_object->labels->singular_name ) ? $post_type_object->labels->singular_name : $post_type;
-		$title            = ! empty( $row->post_title ) ? $row->post_title : sprintf( __( 'Untitled #%d', 'media-reference-inspector' ), $post_id );
+		if ( ! empty( $row->post_title ) ) {
+			$title = $row->post_title;
+		} else {
+			/* translators: %d: Post ID. */
+			$title = sprintf( __( 'Untitled #%d', 'media-reference-inspector' ), $post_id );
+		}
 		$status_object    = get_post_status_object( $post_status );
 		$status_label     = $status_object && isset( $status_object->label ) ? $status_object->label : $post_status;
 		$post             = get_post( $post_id );

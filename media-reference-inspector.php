@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Media Reference Inspector
  * Description:       Find where a Media Library item is referenced in standard WordPress content before you replace or remove it.
- * Version:           2.4.0-beta.1
+ * Version:           2.4.0-beta.2
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            rejoyan9009
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'MEDIAREFINSPECTOR_VERSION', '2.4.0-beta.1' );
+define( 'MEDIAREFINSPECTOR_VERSION', '2.4.0-beta.2' );
 define( 'MEDIAREFINSPECTOR_FILE', __FILE__ );
 define( 'MEDIAREFINSPECTOR_PATH', plugin_dir_path( __FILE__ ) );
 
