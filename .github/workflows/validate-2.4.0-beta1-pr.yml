@@ -1,0 +1,60 @@
+name: Validate Media Reference Inspector 2.4.0 beta.1
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR source
+        uses: actions/checkout@v6
+
+      - name: Apply deterministic beta patches
+        run: python3 .github/scripts/build-2.4.0-beta1.py
+
+      - name: Validate PHP JavaScript metadata and assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Eq '^[[:space:]]*\* Version:[[:space:]]+2\.4\.0-beta\.1[[:space:]]*$' media-reference-inspector.php
+          grep -Eq '^Stable tag:[[:space:]]+2\.3\.0[[:space:]]*$' readme.txt
+          grep -Eq '^Tested up to:[[:space:]]+7\.1[[:space:]]*$' readme.txt
+          grep -q 'Media Impact Preview' includes/class-mediarefinspector-plugin.php
+          grep -q 'Site Audit Summary' includes/class-mediarefinspector-plugin.php
+          grep -q 'mediarefinspector-export-json' includes/class-mediarefinspector-plugin.php
+          grep -q 'find_generic_postmeta_usages' includes/class-mediarefinspector-extended-scanner.php
+          grep -q 'find_seo_social_usages' includes/class-mediarefinspector-extended-scanner.php
+          grep -q 'find_builder_usages' includes/class-mediarefinspector-extended-scanner.php
+          test "$(head -c 8 .wordpress-org/banner-772x250.png | od -An -tx1 | tr -d ' \n')" = "89504e470d0a1a0a"
+          test "$(head -c 8 .wordpress-org/banner-1544x500.png | od -An -tx1 | tr -d ' \n')" = "89504e470d0a1a0a"
+          test ! -e .wordpress-org/screenshot-1.png
+          test ! -e .wordpress-org/screenshot-2.png
+          find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
+          node --check assets/js/admin.js
+
+      - name: Build clean installable ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/media-reference-inspector /tmp/media-reference-inspector-2.4.0-beta.1.zip
+          mkdir -p /tmp/media-reference-inspector/assets/css /tmp/media-reference-inspector/assets/js /tmp/media-reference-inspector/includes
+          cp media-reference-inspector.php readme.txt /tmp/media-reference-inspector/
+          cp assets/css/admin.css /tmp/media-reference-inspector/assets/css/
+          cp assets/js/admin.js /tmp/media-reference-inspector/assets/js/
+          cp includes/*.php /tmp/media-reference-inspector/includes/
+          cd /tmp
+          zip -qr media-reference-inspector-2.4.0-beta.1.zip media-reference-inspector
+          unzip -t media-reference-inspector-2.4.0-beta.1.zip
+
+      - name: Upload test ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: media-reference-inspector-2.4.0-beta.1-pr
+          path: /tmp/media-reference-inspector-2.4.0-beta.1.zip
+          if-no-files-found: error
