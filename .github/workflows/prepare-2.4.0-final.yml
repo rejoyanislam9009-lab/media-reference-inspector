@@ -1,0 +1,90 @@
+name: Prepare Media Reference Inspector 2.4.0 final
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out development branch
+        uses: actions/checkout@v6
+        with:
+          ref: agent/2.4.0-compat-audit
+          fetch-depth: 0
+
+      - name: Prepare final 2.4.0 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/prepare-2.4.0-final.py
+
+      - name: Validate release metadata and syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Eq '^[[:space:]]*\* Version:[[:space:]]+2\.4\.0[[:space:]]*$' media-reference-inspector.php
+          grep -Eq "define\( 'MEDIAREFINSPECTOR_VERSION', '2\.4\.0' \);" media-reference-inspector.php
+          grep -Eq '^Stable tag:[[:space:]]+2\.4\.0[[:space:]]*$' readme.txt
+          grep -Eq '^Tested up to:[[:space:]]+7\.1[[:space:]]*$' readme.txt
+          ! grep -R -F '2.4.0-beta.2' media-reference-inspector.php readme.txt includes assets
+          ! grep -Eq '^== Screenshots ==$' readme.txt
+          grep -Fq 'MediaRefInspector_Update_Notice::register();' media-reference-inspector.php
+          grep -Fq 'What’s new in Media Reference Inspector 2.4.0' includes/class-mediarefinspector-plugin.php
+          find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
+          node --check assets/js/admin.js
+          git diff --check
+
+      - name: Install WordPress Coding Standards
+        shell: bash
+        run: |
+          set -euo pipefail
+          composer global config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+          composer global require --no-interaction --no-progress squizlabs/php_codesniffer:^3.13 wp-coding-standards/wpcs:^3.2 dealerdirect/phpcodesniffer-composer-installer:^1.0
+
+      - name: Run WordPress security SQL and i18n release sniffs
+        shell: bash
+        run: |
+          set -euo pipefail
+          PHPCS="$HOME/.composer/vendor/bin/phpcs"
+          "$PHPCS" --standard=WordPress --extensions=php \
+            --sniffs=WordPress.DB.PreparedSQL,WordPress.DB.PreparedSQLPlaceholders,WordPress.Security.NonceVerification,WordPress.WP.I18n \
+            media-reference-inspector.php includes/*.php
+
+      - name: Commit final validated source to development branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add media-reference-inspector.php readme.txt includes/ assets/
+            git commit -m "Prepare Media Reference Inspector 2.4.0 final"
+            git push origin HEAD:agent/2.4.0-compat-audit
+          fi
+
+      - name: Build final installable ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/media-reference-inspector /tmp/media-reference-inspector-2.4.0.zip
+          mkdir -p /tmp/media-reference-inspector/assets/css /tmp/media-reference-inspector/assets/js /tmp/media-reference-inspector/includes
+          cp media-reference-inspector.php readme.txt /tmp/media-reference-inspector/
+          cp assets/css/admin.css /tmp/media-reference-inspector/assets/css/
+          cp assets/js/admin.js /tmp/media-reference-inspector/assets/js/
+          cp includes/*.php /tmp/media-reference-inspector/includes/
+          cd /tmp
+          zip -qr media-reference-inspector-2.4.0.zip media-reference-inspector
+          unzip -t media-reference-inspector-2.4.0.zip
+
+      - name: Upload final 2.4.0 package
+        uses: actions/upload-artifact@v4
+        with:
+          name: media-reference-inspector-2.4.0-final
+          path: /tmp/media-reference-inspector-2.4.0.zip
+          if-no-files-found: error
