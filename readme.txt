@@ -2,7 +2,7 @@
 Contributors: rejoyan9009
 Tags: media library, media usage, attachments, references, admin tools
 Requires at least: 6.2
-Tested up to: 7.0
+Tested up to: 7.1
 Stable tag: 2.3.0
 Requires PHP: 7.4
 License: GPLv2 or later
@@ -54,7 +54,19 @@ The admin interface reports supported coverage for WordPress Core, WooCommerce, 
 
 = Media Library Status =
 
-Reference checks can store a short-lived local scan-status cache for the inspected attachment so Media Library workflows can show recent on-demand reference status without running a heavy scan on every page load.
+Reference checks store a short-lived local scan-status cache for inspected attachments. Media Library workflows can show a recent reference count/status and offer an explicit re-scan without running a heavy scan on every page load.
+
+= Media Impact Preview =
+
+Single-item scans summarize supported reference categories that could be affected before a media item is replaced or removed. The preview is advisory and read-only.
+
+= Extended Metadata and Builder Coverage =
+
+2.4 adds bounded validation for media-like post meta, term meta, selected option values, known SEO/social image metadata, and supported Bricks, Divi, and Beaver Builder saved data. Candidate values are validated before a reference is reported.
+
+= Site Audit Summary =
+
+Run an explicit bounded audit of up to 100 recent Media Library items to review referenced items, potential-unused review results, file-health issues, broken local uploads URLs, and exact duplicate groups.
 
 = Support =
 
@@ -73,8 +85,12 @@ Media Reference Inspector does not send media or site data to analytics or telem
 
 == Screenshots ==
 
-1. Browse Media Library items from Media > Media References and choose an item to inspect.
-2. Review the scan result and safety warning when no supported references are found.
+1. Scanner media selection and supported integration coverage.
+2. Scan result with evidence, Media Impact Preview, and file health.
+3. Bulk Scan filters, progress, results, and CSV/HTML/JSON export actions.
+4. Broken local uploads URL audit.
+5. Page & Post Audit with media and broken attachment-ID review.
+6. Site Audit Summary and duplicate/integration review tools.
 
 == Frequently Asked Questions ==
 
@@ -107,6 +123,20 @@ An administrator can explicitly submit a bug report, feature request, or questio
 The scanner and support form require the `manage_options` capability because scan results may reveal references to non-public content.
 
 == Changelog ==
+
+= 2.4.0-beta.1 =
+* Added Media Impact Preview for already-computed single-scan results.
+* Added bounded generic media-like post meta, term meta, and selected option validation.
+* Added known Yoast SEO and Rank Math social-image metadata checks.
+* Added modular Bricks, Divi, and Beaver Builder saved-media checks with value validation.
+* Improved Media Library cached reference counts and explicit re-scan wording.
+* Added a bounded manual Site Audit Summary for up to 100 recent media items.
+* Added JSON export alongside CSV and printable HTML reports.
+* Added 2.4 NEW badges and updated What’s New guidance.
+* Updated compatibility metadata to WordPress 7.1 for beta validation.
+* Removed corrupt WordPress.org screenshot assets; real 2.4 screenshots will be captured from the tested plugin UI before publication.
+* Kept WordPress.org banner sources for re-validation and re-sync during the approved stable release.
+* Preserved read-only behavior and added stricter bounds to new metadata queries.
 
 = 2.3.0 =
 * Added reference confidence, source-category, and context metadata for supported scan results.

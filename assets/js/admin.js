@@ -11,6 +11,7 @@
 	var stopButton = document.getElementById('mediarefinspector-stop-bulk');
 	var exportButton = document.getElementById('mediarefinspector-export-csv');
 	var exportHtmlButton = document.getElementById('mediarefinspector-export-html');
+	var exportJsonButton = document.getElementById('mediarefinspector-export-json');
 	var progressWrap = document.getElementById('mediarefinspector-bulk-progress');
 	var progressStatus = document.getElementById('mediarefinspector-progress-status');
 	var progressCount = document.getElementById('mediarefinspector-progress-count');
@@ -77,6 +78,7 @@
 		emptyState.hidden = true;
 		exportButton.disabled = true;
 		if (exportHtmlButton) { exportHtmlButton.disabled = true; }
+		if (exportJsonButton) { exportJsonButton.disabled = true; }
 		updateSummary();
 	}
 
@@ -235,6 +237,7 @@
 		emptyState.hidden = results.length > 0;
 		exportButton.disabled = results.length === 0;
 		if (exportHtmlButton) { exportHtmlButton.disabled = results.length === 0; }
+		if (exportJsonButton) { exportJsonButton.disabled = results.length === 0; }
 		applyResultFilter();
 	}
 
@@ -278,6 +281,26 @@
 		var html = '<!doctype html><html><head><meta charset="utf-8"><title>Media Reference Inspector report</title><style>body{font-family:system-ui,sans-serif;margin:32px;color:#1d2327}table{border-collapse:collapse;width:100%}th,td{border:1px solid #dcdcde;padding:8px;text-align:left}th{background:#f6f7f7}small{color:#646970}</style></head><body><h1>Media Reference Inspector</h1><p>Read-only audit report. No supported references found does not prove a file is unused.</p><table><thead><tr><th>ID</th><th>Media</th><th>Status</th><th>References</th><th>Reference types</th><th>File health</th></tr></thead><tbody>' + body + '</tbody></table></body></html>';
 		var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
 		var link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'media-reference-inspector-report.html'; document.body.appendChild(link); link.click(); URL.revokeObjectURL(link.href); link.remove();
+	}
+
+
+	function exportJson() {
+		if (!results.length) { return; }
+		var report = {
+			tool: 'Media Reference Inspector',
+			version: config.version || '',
+			generatedAt: new Date().toISOString(),
+			advisory: 'No supported references found does not prove that a file is unused.',
+			results: results
+		};
+		var blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json;charset=utf-8' });
+		var link = document.createElement('a');
+		link.href = URL.createObjectURL(blob);
+		link.download = 'media-reference-inspector-report.json';
+		document.body.appendChild(link);
+		link.click();
+		URL.revokeObjectURL(link.href);
+		link.remove();
 	}
 
 	function exportCsv() {
@@ -365,4 +388,5 @@
 	if (healthFilter) { healthFilter.addEventListener('change', applyResultFilter); }
 	exportButton.addEventListener('click', exportCsv);
 	if (exportHtmlButton) { exportHtmlButton.addEventListener('click', exportHtml); }
+	if (exportJsonButton) { exportJsonButton.addEventListener('click', exportJson); }
 }());
