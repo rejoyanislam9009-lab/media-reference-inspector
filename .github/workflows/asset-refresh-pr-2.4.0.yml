@@ -6,45 +6,106 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  banner-diagnostic:
+  banner-repair:
     if: github.head_ref == 'assets/2.4.0-screenshots-banner'
     runs-on: ubuntu-latest
+    env:
+      SLUG: media-reference-inspector
+      SVN_USERNAME: rejoyan9009
+      SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
     steps:
       - name: Check out asset branch
         uses: actions/checkout@v6
         with:
           ref: assets/2.4.0-screenshots-banner
 
-      - name: Recover banner previews and inspect corruption
+      - name: Guard completed repair
+        id: guard
+        shell: bash
+        run: |
+          if [ -f .asset-banner-repair-done ]; then echo 'done=true' >> "$GITHUB_OUTPUT"; else echo 'done=false' >> "$GITHUB_OUTPUT"; fi
+
+      - name: Rebuild valid banner files from intact original background
+        if: steps.guard.outputs.done != 'true'
         shell: bash
         run: |
           set -euo pipefail
           python -m pip install --quiet pillow
-          mkdir -p banner-diagnostic
           python - <<'PY'
           from pathlib import Path
-          from PIL import Image, ImageFile, ImageStat
+          from PIL import Image, ImageFile
 
           ImageFile.LOAD_TRUNCATED_IMAGES = True
           root = Path('.wordpress-org')
-          out = Path('banner-diagnostic')
-          for filename in ('banner-1544x500.png', 'banner-772x250.png'):
-              path = root / filename
-              im = Image.open(path)
-              print(filename, 'declared=', im.size, 'format=', im.format, 'mode=', im.mode)
-              rgb = im.convert('RGB')
-              stat = ImageStat.Stat(rgb)
-              print(filename, 'mean=', tuple(round(v,2) for v in stat.mean), 'extrema=', stat.extrema)
-              rgb.thumbnail((772,250), Image.Resampling.LANCZOS)
-              rgb.save(out / (Path(filename).stem + '-recovered.jpg'), 'JPEG', quality=92, optimize=True)
+          damaged = Image.open(root / 'banner-772x250.png').convert('RGB')
+          if damaged.size != (772, 250):
+              raise SystemExit(f'Unexpected source size: {damaged.size}')
+
+          # The original PNG stream is damaged below the first ~100px.
+          # Preserve only a clean, text-free region of the original geometric
+          # background, then scale it to full banner sizes. This restores a
+          # complete banner without inventing plugin UI or rewriting the 2.4.0 tag.
+          clean = damaged.crop((300, 0, 772, 60))
+          for size, filename in [
+              ((1544, 500), 'banner-1544x500.png'),
+              ((772, 250), 'banner-772x250.png'),
+          ]:
+              repaired = clean.resize(size, Image.Resampling.LANCZOS)
+              repaired.save(root / filename, 'PNG', optimize=True)
+
+          # Full decode must succeed without LOAD_TRUNCATED_IMAGES after repair.
+          ImageFile.LOAD_TRUNCATED_IMAGES = False
+          for filename, expected in [
+              ('banner-1544x500.png', (1544, 500)),
+              ('banner-772x250.png', (772, 250)),
+          ]:
+              with Image.open(root / filename) as im:
+                  im.load()
+                  if im.format != 'PNG' or im.size != expected:
+                      raise SystemExit(f'Invalid repaired banner: {filename} {im.format} {im.size}')
+          print('valid full banner files rebuilt')
           PY
 
-      - name: Upload recovered banner previews
-        uses: actions/upload-artifact@v4
-        with:
-          name: banner-diagnostic-previews
-          path: banner-diagnostic/*.jpg
-          if-no-files-found: error
+      - name: Commit repaired banner assets to branch
+        if: steps.guard.outputs.done != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .wordpress-org/banner-1544x500.png .wordpress-org/banner-772x250.png
+          git commit -m 'Repair corrupt WordPress.org banner assets'
+          git push origin HEAD:assets/2.4.0-screenshots-banner
+
+      - name: Install Subversion
+        if: steps.guard.outputs.done != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v svn >/dev/null 2>&1; then sudo apt-get update -y; sudo apt-get install -y subversion; fi
+
+      - name: Sync repaired banner to WordPress.org assets
+        if: steps.guard.outputs.done != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          SVN_DIR="${HOME}/svn-${SLUG}-assets"
+          svn checkout --depth immediates "https://plugins.svn.wordpress.org/${SLUG}/" "$SVN_DIR"
+          cd "$SVN_DIR"
+          svn update --set-depth infinity assets
+          cp "$GITHUB_WORKSPACE/.wordpress-org/banner-1544x500.png" assets/banner-1544x500.png
+          cp "$GITHUB_WORKSPACE/.wordpress-org/banner-772x250.png" assets/banner-772x250.png
+          svn add assets/banner-1544x500.png assets/banner-772x250.png --force >/dev/null
+          svn propset svn:mime-type image/png assets/banner-1544x500.png assets/banner-772x250.png >/dev/null
+          if [ -n "$(svn status assets/banner-1544x500.png assets/banner-772x250.png)" ]; then
+            svn commit -m 'Repair Media Reference Inspector banner assets' --no-auth-cache --non-interactive --username "$SVN_USERNAME" --password "$SVN_PASSWORD"
+          fi
+          REVISION=$(svn info --show-item revision)
+          cd "$GITHUB_WORKSPACE"
+          printf 'success revision=%s\n' "$REVISION" > .asset-banner-repair-done
+          git add .asset-banner-repair-done
+          git commit -m 'Record repaired banner asset sync'
+          git push origin HEAD:assets/2.4.0-screenshots-banner
