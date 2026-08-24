@@ -76,3 +76,20 @@ jobs:
           name: media-reference-inspector-2.4.0-beta.1
           path: /tmp/media-reference-inspector-2.4.0-beta.1.zip
           if-no-files-found: error
+
+      - name: Record build result
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          STATUS="${{ job.status }}"
+          git reset --hard HEAD
+          git pull --rebase origin agent/2.4.0-compat-audit
+          printf '%s\n' "$STATUS" > .build-result-2.4.0-beta1
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .build-result-2.4.0-beta1
+          if ! git diff --cached --quiet; then
+            git commit -m "Record 2.4.0 beta.1 build result: $STATUS"
+            git push origin HEAD:agent/2.4.0-compat-audit
+          fi
