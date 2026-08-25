@@ -74,7 +74,7 @@ class MediaRefInspector_Update_Notice {
 		);
 		?>
 		<div class="notice notice-info">
-			<p><strong><?php esc_html_e( 'Media Reference Inspector 2.4.0 is ready — see what’s new.', 'media-reference-inspector' ); ?></strong></p>
+			<p><strong><?php esc_html_e( 'Media Reference Inspector 2.4 is ready — see what’s new.', 'media-reference-inspector' ); ?></strong></p>
 			<p><?php esc_html_e( 'New in this release: Media Impact Preview, expanded metadata and SEO/builder coverage, Media Library usage status, Site Audit Summary, JSON export, and WordPress 7.1 compatibility.', 'media-reference-inspector' ); ?></p>
 			<p><a class="button button-primary" href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( 'Explore the new features', 'media-reference-inspector' ); ?></a></p>
 		</div>

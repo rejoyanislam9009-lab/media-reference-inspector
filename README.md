@@ -6,14 +6,20 @@ Media Reference Inspector is a lightweight, read-only WordPress admin tool that 
 
 ## Current release
 
-- Version: `2.4.0`
+- Version: `2.4.1`
 - WordPress.org slug: `media-reference-inspector`
 - Requires WordPress: `6.2+`
 - Requires PHP: `7.4+`
 - Tested up to: `7.1`
 - License: `GPL-2.0-or-later`
 
-## Highlights in 2.4.0
+## 2.4.1 directory presentation maintenance
+
+- Adds five polished, privacy-safe WordPress.org screenshots using real plugin admin UI.
+- Adds matching screenshot captions for Scanner, Bulk Scan, Page Audit, Help, and Broken URLs.
+- Preserves the scanner and audit behavior shipped in 2.4.0.
+
+## Highlights in 2.4
 
 - Media Impact Preview on single-item scans.
 - Bounded generic media-like post, term, and selected option metadata validation.
@@ -66,4 +72,4 @@ Development issues and feature requests may be opened in this GitHub repository.
 
 The GitHub repository is the development source. WordPress.org is the canonical distribution channel for stable releases.
 
-WordPress.org-specific icons and banners live in `.wordpress-org/` and are excluded from the installable plugin package. Corrupt legacy screenshots were removed in 2.4.0; only real, verified plugin UI captures should be added back as screenshots. Release validation checks the plugin version, stable tag, PHP syntax, JavaScript syntax, and WordPress SQL/nonce/i18n checks before publishing to the WordPress.org SVN repository.
+WordPress.org-specific icons, banners, and screenshots live in `.wordpress-org/` and are excluded from the installable plugin package. Release validation checks the plugin version, stable tag, PHP syntax, JavaScript syntax, and WordPress SQL/nonce/i18n checks before publishing to the WordPress.org SVN repository.
