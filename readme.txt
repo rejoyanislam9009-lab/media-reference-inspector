@@ -83,6 +83,13 @@ Media Reference Inspector does not send media or site data to analytics or telem
 3. Go to Media > Media References.
 4. Use Scanner for one media item, Bulk Scan for a batch audit, Broken URLs for missing local uploads files referenced in content, Page Audit for post/page media review, Duplicates for exact-file checks, or Help for documentation and support.
 
+== Screenshots ==
+
+1. Scanner and integration coverage: inspect supported references across WordPress Core, WooCommerce, Elementor, and ACF.
+2. Bulk reference scan: filter media, run bounded read-only scans, and export audit results.
+3. Page & post media audit: review supported media references and local file health for posts and pages.
+4. Help & support: review scanner guidance and submit an explicit administrator support request. The example email value is obscured for privacy.
+5. Broken local media URLs: find supported content that references local uploads files that no longer exist.
 
 == Frequently Asked Questions ==
 
