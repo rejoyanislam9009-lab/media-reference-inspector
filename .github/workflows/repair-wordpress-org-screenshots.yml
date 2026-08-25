@@ -1,0 +1,52 @@
+name: Repair WordPress.org screenshots
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.screenshot-refresh/**'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Rebuild verified screenshot assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .wordpress-org
+          for n in 1 2 3 4 5; do
+            cat .screenshot-refresh/s${n}-* | base64 --decode > ".wordpress-org/screenshot-${n}.jpg.new"
+          done
+          printf '%s  %s\n' \
+            '74bf0050a52038959432ea8e0dc28224eedd1c21ec8dea97f643eb1926c2023e' '.wordpress-org/screenshot-1.jpg.new' \
+            '86fc6b6a983c2091bc5c7aeacb1e336bff7dd9bae713bde16e9c3555fc81d0ad' '.wordpress-org/screenshot-2.jpg.new' \
+            '84e89c18ab3e6d3af7f3e71b3aec6f542d862f29bb156d54c06b0834f5398906' '.wordpress-org/screenshot-3.jpg.new' \
+            'bf5e1c5618d808aba8a52267f8c15fe82038cd90465a218e178b024422f9ce93' '.wordpress-org/screenshot-4.jpg.new' \
+            'a8efcd6c65da69ae6423ff0078d9d1c4fa5374cf28274d831a6b10b78b8152cf' '.wordpress-org/screenshot-5.jpg.new' | sha256sum --check --strict
+          for n in 1 2 3 4 5; do
+            test "$(head -c 2 ".wordpress-org/screenshot-${n}.jpg.new" | od -An -tx1 | tr -d ' \n')" = 'ffd8'
+            mv ".wordpress-org/screenshot-${n}.jpg.new" ".wordpress-org/screenshot-${n}.jpg"
+          done
+
+      - name: Commit only verified screenshots and remove staging
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .screenshot-refresh
+          rm -f .github/workflows/repair-wordpress-org-screenshots.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A .wordpress-org .screenshot-refresh .github/workflows/repair-wordpress-org-screenshots.yml
+          git commit -m 'Replace WordPress.org screenshots with verified high-quality assets'
+          git push origin HEAD:main
