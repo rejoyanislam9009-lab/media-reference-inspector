@@ -3,7 +3,7 @@ Contributors: rejoyan9009
 Tags: media library, media usage, attachments, references, admin tools
 Requires at least: 6.2
 Tested up to: 7.1
-Stable tag: 2.4.0
+Stable tag: 2.4.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -123,6 +123,11 @@ The scanner and support form require the `manage_options` capability because sca
 
 == Changelog ==
 
+= 2.4.1 =
+* Added five polished, privacy-safe WordPress.org screenshots using real plugin admin UI.
+* Added matching screenshot captions for Scanner, Bulk Scan, Page Audit, Help, and Broken URLs.
+* Preserved all 2.4.0 scanner behavior; this is a directory presentation maintenance release.
+
 = 2.4.0 =
 * Added Media Impact Preview for already-computed single-scan results.
 * Added bounded generic media-like post meta, term meta, and selected option validation.
@@ -155,7 +160,7 @@ The scanner and support form require the `manage_options` capability because sca
 * Added a bounded exact Duplicate Finder for recent readable local files.
 * Added confirmed ACF Image, File, and Gallery field reference detection when ACF is active.
 * Added Bulk Scan result sorting and clearer Potential unused review wording.
-* Removed the temporary Diagnostics tab now that normal WordPress.org updates are verified.
+* Removed the temporary Diagnostics tab now that normal WordPress.org updates ar verified.
 * Rebuilt Bulk Scan controls for responsive desktop, tablet, and mobile layouts, including desktop-sized mobile viewports.
 * Added an explicit Help-tab support email form for bug reports, feature requests, and general questions.
 * Added nonce, capability, sanitization, rate-limit, and mail-delivery feedback protections to the support form.
@@ -182,7 +187,7 @@ The scanner and support form require the `manage_options` capability because sca
 = 1.1.0 =
 * Added generated image-size URL detection and core media-block attachment ID detection.
 * Extended menu, header, and background checks to generated URL variants.
-* Added post IDs to content-reference labels.
+* Added post IDs in the content-reference labels.
 
 = 1.0.2 =
 * Improved prepared SQL analysis and validated read-only navigation inputs.
