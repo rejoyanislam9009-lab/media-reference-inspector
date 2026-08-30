@@ -1,0 +1,138 @@
+name: Publish Flow Store Check 1.0.0
+
+on:
+  push:
+    branches:
+      - "ops/publish-flow-store-check-1.0.0"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-flow-store-check-1.0.0
+  cancel-in-progress: false
+
+env:
+  SLUG: flow-store-check
+  VERSION: 1.0.0
+  SOURCE_REPO: https://github.com/rejoyanislam9009-lab/StoreVitals.git
+  SOURCE_SHA: 430bae468a0b972b32f46b8fe2dd4a36becdcbd3
+  SVN_URL: https://plugins.svn.wordpress.org/flow-store-check
+  SVN_USERNAME: rejoyan9009
+  SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install release tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y subversion rsync fonts-dejavu-core
+          python3 -m pip install --disable-pip-version-check pillow
+
+      - name: Fetch exact validated StoreVitals source
+        run: |
+          set -euo pipefail
+          git init source
+          cd source
+          git remote add origin "$SOURCE_REPO"
+          git fetch --depth=1 origin "$SOURCE_SHA"
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+
+      - name: Build release package and WordPress.org assets
+        run: |
+          set -euo pipefail
+          mkdir -p "build/plugin/$SLUG" build/wporg-assets
+          cp source/flow-store-check.php source/uninstall.php source/readme.txt source/LICENSE "build/plugin/$SLUG/"
+          cp -R source/assets source/src source/languages "build/plugin/$SLUG/"
+          python3 source/tools/build-wporg-assets.py --output build/wporg-assets
+          python3 source/tools/build-wporg-branding.py --output build/wporg-assets
+
+      - name: Validate package metadata PHP and assets
+        run: |
+          set -euo pipefail
+          grep -F "Plugin Name:       Flow Store Check for WooCommerce" source/flow-store-check.php
+          grep -F "Version:           $VERSION" source/flow-store-check.php
+          grep -F "Text Domain:       $SLUG" source/flow-store-check.php
+          grep -F "Stable tag: $VERSION" source/readme.txt
+          grep -F "=== Flow Store Check for WooCommerce ===" source/readme.txt
+          if grep -R -n -E "Rejoyan Store Health|rejoyan-store-health" "build/plugin/$SLUG"; then
+            echo "Previous public branding remains in package."
+            exit 1
+          fi
+          find "build/plugin/$SLUG" -type f -name "*.php" -print0 | xargs -0 -n1 php -l
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          expected = {
+              'icon-128x128.png': (128, 128),
+              'icon-256x256.png': (256, 256),
+              'banner-772x250.png': (772, 250),
+              'banner-1544x500.png': (1544, 500),
+              'screenshot-1.png': (1280, 800),
+              'screenshot-2.png': (1280, 800),
+              'screenshot-3.png': (1280, 800),
+          }
+          root = Path('build/wporg-assets')
+          for name, size in expected.items():
+              path = root / name
+              if not path.is_file():
+                  raise SystemExit(f'Missing {name}')
+              with Image.open(path) as image:
+                  if image.size != size:
+                      raise SystemExit(f'{name}: {image.size} != {size}')
+          print('WordPress.org assets validated.')
+          PY
+
+      - name: Verify SVN credentials and release state
+        run: |
+          set -euo pipefail
+          if [ -z "$SVN_PASSWORD" ]; then
+            echo "WORDPRESS_SVN_PASSWORD is unavailable in this repository."
+            exit 1
+          fi
+          svn info "$SVN_URL" --username "$SVN_USERNAME" --password "$SVN_PASSWORD" --non-interactive --no-auth-cache >/dev/null
+          if svn ls "$SVN_URL/tags/$VERSION" --username "$SVN_USERNAME" --password "$SVN_PASSWORD" --non-interactive --no-auth-cache >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists; refusing to overwrite it."
+            exit 1
+          fi
+
+      - name: Stage trunk assets and immutable tag
+        run: |
+          set -euo pipefail
+          svn checkout "$SVN_URL" svn --username "$SVN_USERNAME" --password "$SVN_PASSWORD" --non-interactive --no-auth-cache
+          mkdir -p svn/trunk svn/assets svn/tags
+          rsync -a --delete "build/plugin/$SLUG/" svn/trunk/
+          rsync -a --delete build/wporg-assets/ svn/assets/
+          svn add --force svn/trunk svn/assets >/dev/null
+          while IFS= read -r line; do
+            if [ "${line:0:1}" = "!" ]; then
+              svn rm --force "${line:8}"
+            fi
+          done < <(svn status svn/trunk svn/assets)
+          svn copy svn/trunk "svn/tags/$VERSION"
+          if compgen -G "svn/assets/*.png" > /dev/null; then
+            svn propset svn:mime-type image/png svn/assets/*.png >/dev/null
+          fi
+          svn status svn/trunk svn/assets "svn/tags/$VERSION"
+
+      - name: Commit Flow Store Check 1.0.0 to WordPress.org
+        run: |
+          set -euo pipefail
+          svn commit svn/trunk svn/assets "svn/tags/$VERSION" \
+            -m "Release Flow Store Check $VERSION by rejoyan9009" \
+            --username "$SVN_USERNAME" \
+            --password "$SVN_PASSWORD" \
+            --non-interactive \
+            --no-auth-cache
+
+      - name: Verify published SVN state
+        run: |
+          set -euo pipefail
+          svn ls "$SVN_URL/trunk" --username "$SVN_USERNAME" --password "$SVN_PASSWORD" --non-interactive --no-auth-cache | grep -F "flow-store-check.php"
+          svn ls "$SVN_URL/assets" --username "$SVN_USERNAME" --password "$SVN_PASSWORD" --non-interactive --no-auth-cache | grep -F "icon-256x256.png"
+          svn ls "$SVN_URL/tags/$VERSION" --username "$SVN_USERNAME" --password "$SVN_PASSWORD" --non-interactive --no-auth-cache | grep -F "flow-store-check.php"
+          echo "Flow Store Check $VERSION published to WordPress.org SVN."
