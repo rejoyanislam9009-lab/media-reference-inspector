@@ -1,0 +1,118 @@
+name: Publish Flow Store Check presentation
+
+on:
+  push:
+    branches:
+      - "ops/publish-flow-store-check-presentation"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      SLUG: flow-store-check
+      VERSION: 1.0.0
+      SOURCE_REPO: https://github.com/rejoyanislam9009-lab/StoreVitals.git
+      SOURCE_SHA: 3e10d512f2781ec3a641a172dca97f8329fbc484
+      SVN_URL: https://plugins.svn.wordpress.org/flow-store-check
+      SVN_USERNAME: rejoyan9009
+      SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
+    steps:
+      - name: Install release tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y subversion fonts-dejavu-core
+          python3 -m pip install --disable-pip-version-check pillow
+
+      - name: Fetch exact validated StoreVitals source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init source
+          cd source
+          git remote add origin "$SOURCE_REPO"
+          git fetch --depth=1 origin "$SOURCE_SHA"
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+
+      - name: Build annotated screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/wporg-assets
+          python3 source/tools/build-wporg-assets.py --output build/wporg-assets
+          python3 source/tools/build-wporg-branding.py --output build/wporg-assets
+          python3 source/tools/annotate-wporg-screenshots.py --directory build/wporg-assets
+
+      - name: Validate readme and screenshot package
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -F "=== Flow Store Check for WooCommerce ===" source/readme.txt
+          grep -F "Tags: woocommerce, health check, diagnostics, inventory, checkout" source/readme.txt
+          grep -F "Stable tag: $VERSION" source/readme.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          root = Path('build/wporg-assets')
+          for name in ('screenshot-1.png', 'screenshot-2.png', 'screenshot-3.png'):
+              path = root / name
+              if not path.is_file():
+                  raise SystemExit(f'Missing {name}')
+              with Image.open(path) as image:
+                  if image.size != (1280, 800):
+                      raise SystemExit(f'{name}: unexpected dimensions {image.size}')
+          print('Annotated screenshots validated.')
+          PY
+
+      - name: Verify SVN credentials and current release
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SVN_PASSWORD"
+          svn info "$SVN_URL" --username "$SVN_USERNAME" --password "$SVN_PASSWORD" --non-interactive --no-auth-cache >/dev/null
+          svn ls "$SVN_URL/trunk" --username "$SVN_USERNAME" --password "$SVN_PASSWORD" --non-interactive --no-auth-cache | grep -F "flow-store-check.php"
+          svn ls "$SVN_URL/tags/$VERSION" --username "$SVN_USERNAME" --password "$SVN_PASSWORD" --non-interactive --no-auth-cache | grep -F "flow-store-check.php"
+
+      - name: Stage readme and screenshot refresh only
+        shell: bash
+        run: |
+          set -euo pipefail
+          svn checkout "$SVN_URL" svn --username "$SVN_USERNAME" --password "$SVN_PASSWORD" --non-interactive --no-auth-cache
+          cp source/readme.txt svn/trunk/readme.txt
+          cp source/readme.txt "svn/tags/$VERSION/readme.txt"
+          cp build/wporg-assets/screenshot-1.png svn/assets/screenshot-1.png
+          cp build/wporg-assets/screenshot-2.png svn/assets/screenshot-2.png
+          cp build/wporg-assets/screenshot-3.png svn/assets/screenshot-3.png
+          svn propset svn:mime-type image/png svn/assets/screenshot-1.png svn/assets/screenshot-2.png svn/assets/screenshot-3.png >/dev/null
+          svn status svn/trunk/readme.txt "svn/tags/$VERSION/readme.txt" svn/assets/screenshot-1.png svn/assets/screenshot-2.png svn/assets/screenshot-3.png
+          if svn status | awk '{print $2}' | grep -v -E '^(svn/trunk/readme.txt|svn/tags/1.0.0/readme.txt|svn/assets/screenshot-[123]\.png)$' | grep -q .; then
+            echo "Unexpected SVN path staged; refusing to publish."
+            svn status
+            exit 1
+          fi
+
+      - name: Commit presentation refresh to WordPress.org
+        shell: bash
+        run: |
+          set -euo pipefail
+          svn commit svn/trunk/readme.txt "svn/tags/$VERSION/readme.txt" svn/assets/screenshot-1.png svn/assets/screenshot-2.png svn/assets/screenshot-3.png \
+            -m "Refresh Flow Store Check screenshots and directory metadata" \
+            --username "$SVN_USERNAME" \
+            --password "$SVN_PASSWORD" \
+            --non-interactive \
+            --no-auth-cache
+
+      - name: Verify published SVN presentation state
+        shell: bash
+        run: |
+          set -euo pipefail
+          svn cat "$SVN_URL/tags/$VERSION/readme.txt" --username "$SVN_USERNAME" --password "$SVN_PASSWORD" --non-interactive --no-auth-cache | grep -F "Tags: woocommerce, health check, diagnostics, inventory, checkout"
+          svn ls "$SVN_URL/assets" --username "$SVN_USERNAME" --password "$SVN_PASSWORD" --non-interactive --no-auth-cache | grep -F "screenshot-1.png"
+          svn ls "$SVN_URL/assets" --username "$SVN_USERNAME" --password "$SVN_PASSWORD" --non-interactive --no-auth-cache | grep -F "screenshot-2.png"
+          svn ls "$SVN_URL/assets" --username "$SVN_USERNAME" --password "$SVN_PASSWORD" --non-interactive --no-auth-cache | grep -F "screenshot-3.png"
+          echo "Flow Store Check presentation refresh published successfully."
