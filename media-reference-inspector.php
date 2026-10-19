@@ -5,7 +5,7 @@
  * Version:           2.4.1
  * Requires at least: 6.2
  * Requires PHP:      7.4
- * Author:            rejoyan9009
+ * Author:            codelith
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       media-reference-inspector
