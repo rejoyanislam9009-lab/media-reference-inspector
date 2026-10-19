@@ -1,5 +1,5 @@
 === Media Reference Inspector ===
-Contributors: rejoyan9009
+Contributors: codelith
 Tags: media library, media usage, attachments, references, admin tools
 Requires at least: 6.2
 Tested up to: 7.1
